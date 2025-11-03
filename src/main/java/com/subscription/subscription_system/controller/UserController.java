@@ -2,7 +2,9 @@ package com.subscription.subscription_system.controller;
 
 import com.subscription.subscription_system.dto.UserCreateDto;
 import com.subscription.subscription_system.entity.UserEntity;
+import com.subscription.subscription_system.exception.CommonException;
 import com.subscription.subscription_system.service.UserService;
+import com.subscription.subscription_system.validator.basicValidation.UserValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -19,10 +21,18 @@ public class UserController {
     @Autowired
     UserService userService;
 
-    @PostMapping("/create")
-    public ResponseEntity<UserEntity> createUser(@RequestBody UserCreateDto userCreateDto){
-        UserEntity createdUser = userService.createUser(userCreateDto);
-        return ResponseEntity.ok(createdUser);
+    @Autowired
+    UserValidator userValidator;
+
+    @PostMapping("/create/user")
+    public ResponseEntity<String> createUser(@RequestBody UserCreateDto userCreateDto) throws CommonException {
+        //Basic Validation for creating user
+        log.info("Basic Validation for creating a user");
+        userValidator.validateUserCreate(userCreateDto);
+        //Creating user
+        log.info("Creating a user");
+        String user = userService.createUser(userCreateDto);
+        return ResponseEntity.ok(user);
     }
 
 

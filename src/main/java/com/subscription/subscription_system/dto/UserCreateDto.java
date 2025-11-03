@@ -5,9 +5,12 @@ import lombok.Data;
 @Data
 public class UserCreateDto {
     private String empId;
-    private String name;
-    private String sex;
+    private String firstName;
+    private String lastName;
     private String email;
-    private String phoneNumber;
     private String address;
+    private String dateOfBirth;
+    private String phoneNumber;
+    private String sex;
+    private String role;
 }

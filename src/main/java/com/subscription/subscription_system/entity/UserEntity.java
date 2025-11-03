@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 @Document(collection = "User")
 @Getter
@@ -17,10 +18,30 @@ public class UserEntity {
     @Id
     private String id;
 
+    @Field("emp_id")
     private String empId;
-    private String name;
-    private String sex;
+
+    @Field("first_name")
+    private String firstName;
+
+    @Field("last_name")
+    private String lastName;
+
+    @Field("email")
     private String email;
-    private String phoneNumber;
+
+    @Field("address")
     private String address;
+
+    @Field("DOB")
+    private String dob;
+
+    @Field("phone_number")
+    private String phoneNumber;
+
+    @Field("sex")
+    private String sex;
+
+    @Field("role")
+    private String role;
 }
