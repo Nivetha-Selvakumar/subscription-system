@@ -1,10 +1,8 @@
 package com.subscription.subscription_system.service.impl;
 
-import com.subscription.subscription_system.dto.UserCreateDto;
-import com.subscription.subscription_system.entity.AdminEntity;
-import com.subscription.subscription_system.entity.SubscriberEntity;
+import com.subscription.subscription_system.dto.LoginRequestDto;
+import com.subscription.subscription_system.dto.UserCreateRequestDto;
 import com.subscription.subscription_system.entity.UserEntity;
-import com.subscription.subscription_system.enumuration.EnumUserType;
 import com.subscription.subscription_system.exception.CommonException;
 import com.subscription.subscription_system.mapper.UserMapper;
 import com.subscription.subscription_system.repository.AdminRepo;
@@ -13,11 +11,8 @@ import com.subscription.subscription_system.repository.UserRepo;
 import com.subscription.subscription_system.service.UserService;
 import com.subscription.subscription_system.validation.BusinessValidation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Objects;
 
 @Component
 public class UserServiceImpl implements UserService {
@@ -38,28 +33,36 @@ public class UserServiceImpl implements UserService {
     SubscriberRepo subscriberRepo;
 
     @Override
-    public String createUser(UserCreateDto userCreateDto) throws CommonException {
+    public UserEntity createUser(UserCreateRequestDto userCreateDto) throws CommonException {
 
-        //check duplicate email or empId
+        //check duplicate email
         businessValidation.getUserByEmail(userCreateDto.getEmail());
 
         // Save User
         UserEntity userEntity = userMapper.mapUserDtoToUserEntity(userCreateDto);
         userRepo.save(userEntity);
-        //If Admin
-        if (Objects.equals(userCreateDto.getRole(), EnumUserType.ADMIN.getValue())) {
-            AdminEntity adminEntity = new AdminEntity();
-            adminEntity.setUser(userEntity);
-            adminEntity.setSalary(0.0);
-            adminRepo.save(adminEntity);
-        } else if (Objects.equals(userCreateDto.getRole(), EnumUserType.SUBSCRIBER.getValue())) {
-            SubscriberEntity subscriberEntity = new SubscriberEntity();
-            subscriberEntity.setUser(userEntity);
-            subscriberEntity.setCurrentSubStatus("Inactive");
-            subscriberEntity.setJoinDate(LocalDateTime.now().toString());
-            subscriberRepo.save(subscriberEntity);
-        }
+//       if (Objects.equals(userCreateDto.getRole(), EnumUserType.SUBSCRIBER.getValue())) {
+//            SubscriberEntity subscriberEntity = new SubscriberEntity();
+//            subscriberEntity.setUser(userEntity);
+//            subscriberEntity.setCurrentSubStatus("Inactive");
+//            subscriberEntity.setJoinDate(LocalDateTime.now().toString());
+//            subscriberRepo.save(subscriberEntity);
+//        }
         //Return user values
-        return ("User created Successfully");
+        return (userEntity);
+    }
+
+    @Override
+    public UserEntity loggingUser(LoginRequestDto loginRequestDto) throws CommonException {
+        UserEntity user = userRepo.findByEmail(loginRequestDto.getEmail());
+        if(user == null ){
+            throw new CommonException("User does not exist", HttpStatus.CONFLICT.value());
+        }
+
+        if(!user.getPassword().equals(loginRequestDto.getPassword())){
+            throw new CommonException("Password doesn't match", HttpStatus.BAD_REQUEST.value());
+        }
+
+        return user;
     }
 }

@@ -3,7 +3,7 @@ package com.subscription.subscription_system.dto;
 import lombok.Data;
 
 @Data
-public class UserCreateDto {
+public class AdminCreateRequestDto {
     private String firstName;
     private String lastName;
     private String email;
@@ -13,4 +13,5 @@ public class UserCreateDto {
     private String phoneNumber;
     private String sex;
     private String role;
+    private String salary;
 }

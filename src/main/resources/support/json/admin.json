@@ -1,5 +1,5 @@
 {
-  "userCreate": {
+  "adminCreate": {
     "body": [
       {
         "name": "firstName",
@@ -63,24 +63,13 @@
         "maxLength": 30,
         "format": "^[A-Za-z]+$",
         "displayName": "Role"
-      }
-    ]
-  },
-  "userLogin": {
-    "body" : [
-      {
-        "name": "email",
-        "required": true,
-        "maxLength": 100,
-        "format": "^[\\w.%+-]+@[\\w.-]+\\.[A-Za-z]{2,6}$",
-        "displayName": "Email Address"
       },
       {
-        "name": "password",
-        "required": true,
-        "maxLength": 25,
-        "format": null,
-        "displayName": "Password"
+        "name": "salary",
+        "required": false,
+        "maxLength": 30,
+        "format": "^[0-9]+$",
+        "displayName": "Salary"
       }
     ]
   }

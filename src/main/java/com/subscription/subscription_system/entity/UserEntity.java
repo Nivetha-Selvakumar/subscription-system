@@ -1,6 +1,8 @@
 package com.subscription.subscription_system.entity;
 
 
+import com.subscription.subscription_system.enumuration.EnumSexType;
+import com.subscription.subscription_system.enumuration.EnumUserType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -40,8 +42,8 @@ public class UserEntity {
     private String phoneNumber;
 
     @Field("sex")
-    private String sex;
+    private EnumSexType sex;
 
     @Field("role")
-    private String role;
+    private EnumUserType role;
 }

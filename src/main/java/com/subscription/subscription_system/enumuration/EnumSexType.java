@@ -1,12 +1,14 @@
 package com.subscription.subscription_system.enumuration;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
+@JsonFormat(shape = JsonFormat.Shape.OBJECT)
 public enum EnumSexType {
 
-    F("F","Female"),
-    M("M","Male");
+    FEMALE("FEMALE", "Female"),
+    MALE("MALE", "Male"),
+    OTHER("OTHER", "Other");
 
     private final String value;
     private final String name;
@@ -16,16 +18,13 @@ public enum EnumSexType {
         this.name = name;
     }
 
-    @JsonValue
     public String getValue() {
         return value;
     }
 
-    @JsonValue
     public String getName() {
         return name;
     }
-
 
     @JsonCreator
     public static EnumSexType fromValue(String value) {

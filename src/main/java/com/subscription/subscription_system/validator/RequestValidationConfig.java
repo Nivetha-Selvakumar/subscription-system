@@ -8,5 +8,7 @@ import org.springframework.stereotype.Component;
 public class RequestValidationConfig {
 
     RequestValidationItem userCreate;
+    RequestValidationItem userLogin;
+    RequestValidationItem adminCreate;
 
 }

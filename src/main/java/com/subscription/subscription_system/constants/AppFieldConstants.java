@@ -15,4 +15,8 @@ public class AppFieldConstants {
     public static final String ROLE = "role";
     public static final String PASSWORD = "password";
 
+    // For Admin
+    public static final String SALARY = "salary";
+
+
 }

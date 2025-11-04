@@ -6,7 +6,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum EnumUserType {
 
     ADMIN("Admin"),
-    SUBSCRIBER("Subscriber");
+    SUBSCRIBER("Subscriber"),
+    USER("User");
 
     private final String value;
 

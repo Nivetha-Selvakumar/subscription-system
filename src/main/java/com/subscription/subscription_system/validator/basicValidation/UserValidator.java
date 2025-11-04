@@ -2,7 +2,8 @@ package com.subscription.subscription_system.validator.basicValidation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.subscription.subscription_system.constants.AppFieldConstants;
-import com.subscription.subscription_system.dto.UserCreateDto;
+import com.subscription.subscription_system.dto.LoginRequestDto;
+import com.subscription.subscription_system.dto.UserCreateRequestDto;
 import com.subscription.subscription_system.exception.ApplicationErrorCode;
 import com.subscription.subscription_system.exception.CommonException;
 import com.subscription.subscription_system.exception.ErrorMessages;
@@ -41,7 +42,7 @@ public class UserValidator {
                 RequestValidationConfig.class);
     }
 
-    public void validateUserCreate(UserCreateDto input) throws CommonException {
+    public void validateUserCreate(UserCreateRequestDto input) throws CommonException {
         Map<String, String> actualParameters = getUserCreateParams(input);
 
         log.trace("Validate mandatory field for creating User ");
@@ -82,7 +83,7 @@ public class UserValidator {
         }
     }
 
-    private static Map<String, String> getUserCreateParams(UserCreateDto input) {
+    private static Map<String, String> getUserCreateParams(UserCreateRequestDto input) {
         Map<String, String> actualParameters = new HashMap<>();
         actualParameters.put(AppFieldConstants.FIRST_NAME, input.getFirstName());
         actualParameters.put(AppFieldConstants.LAST_NAME, input.getLastName());
@@ -95,4 +96,54 @@ public class UserValidator {
         actualParameters.put(AppFieldConstants.ROLE, input.getRole());
         return actualParameters;
     }
+
+    public void validateLoginUser(LoginRequestDto input) throws CommonException {
+        Map<String, String> actualParameters = getUserLoginParams(input);
+
+        log.trace("Validate mandatory field for LoggingIn a User ");
+        Map<String, String> formatMapDisplayName = requestValidationConfig.getUserLogin().getBody().stream()
+                .filter(a -> a.getDisplayName() != null)
+                .collect(Collectors.toMap(RequestComponent::getName, RequestComponent::getDisplayName));
+
+        Set<String> mandatoryHeader = requestValidationConfig.getUserLogin().getBody().stream()
+                .filter(RequestComponent::getRequired).map(RequestComponent::getName).collect(Collectors.toSet());
+
+        ValidationError validationError = CommonRequestValidator.validateMandatoryFields(actualParameters,
+                mandatoryHeader,formatMapDisplayName);
+        if (validationError != null) {
+            log.warn(ErrorMessages.MSG_VALIDATION, validationError);
+            throw ApplicationErrorCode.MISSING_MANDATORY_FIELD.getError().reqValidationError(validationError.getField(),
+                    HttpStatus.BAD_REQUEST.value());
+        }
+
+        log.trace("Validate Field size for LoggingIn a User");
+        Map<String, Integer> fieldSizeMapHeader = requestValidationConfig.getUserLogin().getBody().stream()
+                .collect(Collectors.toMap(RequestComponent::getName, RequestComponent::getMaxLength));
+        validationError = CommonRequestValidator.validateFieldSize(actualParameters, fieldSizeMapHeader,formatMapDisplayName);
+        if (validationError != null) {
+            log.warn(ErrorMessages.MSG_VALIDATION, validationError);
+            throw ApplicationErrorCode.INVALID_FIELD_SIZE.getError().reqValidationError(validationError.getField(),
+                    HttpStatus.BAD_REQUEST.value());
+        }
+
+        log.trace("Validate Field format for LoggingIn a User");
+        Map<String, String> formatMapBody = requestValidationConfig.getUserLogin().getBody().stream()
+                .filter(a -> a.getFormat() != null)
+                .collect(Collectors.toMap(RequestComponent::getName, RequestComponent::getFormat));
+        validationError = CommonRequestValidator.validateFieldValueFormat(actualParameters, formatMapBody,formatMapDisplayName);
+        if (validationError != null) {
+            log.warn(ErrorMessages.MSG_VALIDATION, validationError);
+            throw ApplicationErrorCode.INVALID_INPUT_FORMAT.getError().reqValidationError(validationError.getField(),
+                    HttpStatus.BAD_REQUEST.value());
+        }
+    }
+
+    private Map<String, String> getUserLoginParams(LoginRequestDto input) {
+        Map<String, String> actualParameters = new HashMap<>();
+        actualParameters.put(AppFieldConstants.EMAIL, input.getEmail());
+        actualParameters.put(AppFieldConstants.PASSWORD, input.getPassword());
+
+        return actualParameters;
+    }
+
 }
