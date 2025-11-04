@@ -2,13 +2,6 @@
   "userCreate": {
     "body": [
       {
-        "name": "empId",
-        "required": true,
-        "maxLength": 20,
-        "format": "^[A-Za-z0-9-]+$",
-        "displayName": "Employee ID"
-      },
-      {
         "name": "firstName",
         "required": true,
         "maxLength": 50,
@@ -28,6 +21,13 @@
         "maxLength": 100,
         "format": "^[\\w.%+-]+@[\\w.-]+\\.[A-Za-z]{2,6}$",
         "displayName": "Email Address"
+      },
+      {
+        "name": "password",
+        "required": true,
+        "maxLength": 25,
+        "format": "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,100}$",
+        "displayName": "Password"
       },
       {
         "name": "address",
@@ -53,13 +53,13 @@
       {
         "name": "sex",
         "required": true,
-        "maxLength": 1,
-        "format": "^[MFmf]$",
+        "maxLength": 6,
+        "format": "^(Male|Female|Other)$",
         "displayName": "Sex"
       },
       {
         "name": "role",
-        "required": true,
+        "required": false,
         "maxLength": 30,
         "format": "^[A-Za-z]+$",
         "displayName": "Role"

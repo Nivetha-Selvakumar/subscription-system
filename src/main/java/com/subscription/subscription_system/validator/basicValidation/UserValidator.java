@@ -84,10 +84,10 @@ public class UserValidator {
 
     private static Map<String, String> getUserCreateParams(UserCreateDto input) {
         Map<String, String> actualParameters = new HashMap<>();
-        actualParameters.put(AppFieldConstants.EMP_ID, input.getEmpId());
         actualParameters.put(AppFieldConstants.FIRST_NAME, input.getFirstName());
         actualParameters.put(AppFieldConstants.LAST_NAME, input.getLastName());
         actualParameters.put(AppFieldConstants.EMAIL, input.getEmail());
+        actualParameters.put(AppFieldConstants.PASSWORD, input.getPassword());
         actualParameters.put(AppFieldConstants.ADDRESS, input.getAddress());
         actualParameters.put(AppFieldConstants.DATE_OF_BIRTH, input.getDateOfBirth());
         actualParameters.put(AppFieldConstants.PHONE_NUMBER, input.getPhoneNumber());

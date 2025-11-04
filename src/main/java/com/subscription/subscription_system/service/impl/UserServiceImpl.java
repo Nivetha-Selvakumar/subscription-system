@@ -41,26 +41,25 @@ public class UserServiceImpl implements UserService {
     public String createUser(UserCreateDto userCreateDto) throws CommonException {
 
         //check duplicate email or empId
-        businessValidation.getUserByEmailOrEmpId(userCreateDto.getEmail(), userCreateDto.getEmpId());
+        businessValidation.getUserByEmail(userCreateDto.getEmail());
 
         // Save User
         UserEntity userEntity = userMapper.mapUserDtoToUserEntity(userCreateDto);
-
+        userRepo.save(userEntity);
         //If Admin
-        if(Objects.equals(userCreateDto.getRole(), EnumUserType.ADMIN.getValue())){
+        if (Objects.equals(userCreateDto.getRole(), EnumUserType.ADMIN.getValue())) {
             AdminEntity adminEntity = new AdminEntity();
             adminEntity.setUser(userEntity);
             adminEntity.setSalary(0.0);
             adminRepo.save(adminEntity);
-        }else if (Objects.equals(userCreateDto.getRole(), EnumUserType.SUBSCRIBER.getValue())) {
+        } else if (Objects.equals(userCreateDto.getRole(), EnumUserType.SUBSCRIBER.getValue())) {
             SubscriberEntity subscriberEntity = new SubscriberEntity();
             subscriberEntity.setUser(userEntity);
             subscriberEntity.setCurrentSubStatus("Inactive");
             subscriberEntity.setJoinDate(LocalDateTime.now().toString());
             subscriberRepo.save(subscriberEntity);
         }
-
         //Return user values
-        return("User created Successfully") ;
+        return ("User created Successfully");
     }
 }

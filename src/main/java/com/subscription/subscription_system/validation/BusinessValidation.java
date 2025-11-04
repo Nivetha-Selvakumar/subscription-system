@@ -21,8 +21,8 @@ public class BusinessValidation {
     }
 
 
-    public void getUserByEmailOrEmpId(String email, String empId) throws CommonException {
-        UserEntity existingUser = userRepo.findByEmailOrEmpId(email,empId);
+    public void getUserByEmail(String email) throws CommonException {
+        UserEntity existingUser = userRepo.findByEmail(email);
         if (existingUser != null) {
             throw new CommonException("User with Email '" + email + "' already exists", HttpStatus.CONFLICT.value());
         }

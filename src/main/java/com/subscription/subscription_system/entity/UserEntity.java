@@ -18,9 +18,6 @@ public class UserEntity {
     @Id
     private String id;
 
-    @Field("emp_id")
-    private String empId;
-
     @Field("first_name")
     private String firstName;
 
@@ -29,6 +26,9 @@ public class UserEntity {
 
     @Field("email")
     private String email;
+
+    @Field("password")
+    private String password;
 
     @Field("address")
     private String address;

@@ -9,10 +9,10 @@ public class UserMapper {
 
     public UserEntity mapUserDtoToUserEntity(UserCreateDto userCreateDto) {
         UserEntity userEntity = new UserEntity();
-        userEntity.setEmpId(userCreateDto.getEmpId());
         userEntity.setFirstName(userCreateDto.getFirstName());
         userEntity.setLastName(userCreateDto.getLastName());
         userEntity.setEmail(userCreateDto.getEmail());
+        userEntity.setPassword(userCreateDto.getPassword());
         userEntity.setAddress(userCreateDto.getAddress());
         userEntity.setDob(userCreateDto.getDateOfBirth());
         userEntity.setPhoneNumber(userCreateDto.getPhoneNumber());

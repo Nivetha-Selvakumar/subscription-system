@@ -5,7 +5,6 @@ public class AppFieldConstants {
     private AppFieldConstants() {
     }
     // For user creation
-    public static final String EMP_ID = "empId";
     public static final String FIRST_NAME = "firstName";
     public static final String LAST_NAME = "lastName";
     public static final String EMAIL = "email";
@@ -14,5 +13,6 @@ public class AppFieldConstants {
     public static final String PHONE_NUMBER = "phoneNumber";
     public static final String SEX = "sex";
     public static final String ROLE = "role";
+    public static final String PASSWORD = "password";
 
 }
