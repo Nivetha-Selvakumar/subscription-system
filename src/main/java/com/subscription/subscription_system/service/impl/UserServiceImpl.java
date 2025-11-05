@@ -1,7 +1,7 @@
 package com.subscription.subscription_system.service.impl;
 
-import com.subscription.subscription_system.dto.LoginRequestDto;
 import com.subscription.subscription_system.dto.UserCreateRequestDto;
+import com.subscription.subscription_system.dto.UserGetRequestDto;
 import com.subscription.subscription_system.entity.UserEntity;
 import com.subscription.subscription_system.exception.CommonException;
 import com.subscription.subscription_system.mapper.UserMapper;
@@ -11,7 +11,6 @@ import com.subscription.subscription_system.repository.UserRepo;
 import com.subscription.subscription_system.service.UserService;
 import com.subscription.subscription_system.validation.BusinessValidation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -53,16 +52,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserEntity loggingUser(LoginRequestDto loginRequestDto) throws CommonException {
-        UserEntity user = userRepo.findByEmail(loginRequestDto.getEmail());
-        if(user == null ){
-            throw new CommonException("User does not exist", HttpStatus.CONFLICT.value());
-        }
+    public UserEntity getUserDetails(UserGetRequestDto userGetRequestDto) {
 
-        if(!user.getPassword().equals(loginRequestDto.getPassword())){
-            throw new CommonException("Password doesn't match", HttpStatus.BAD_REQUEST.value());
-        }
-
-        return user;
+        return null;
     }
+
 }

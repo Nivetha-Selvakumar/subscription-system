@@ -7,9 +7,9 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class LoginResponseDto {
+public class LogoutResponseDto {
+
     private String message;
     private int code;
-    private Object loginData;
-
+    
 }

@@ -1,12 +1,11 @@
 package com.subscription.subscription_system.controller;
 
-import com.subscription.subscription_system.dto.LoginRequestDto;
-import com.subscription.subscription_system.dto.LoginResponseDto;
-import com.subscription.subscription_system.dto.UserCreateRequestDto;
-import com.subscription.subscription_system.dto.UserCreateResponseDto;
+import com.subscription.subscription_system.dto.*;
+import com.subscription.subscription_system.entity.AuthTokenEntity;
 import com.subscription.subscription_system.entity.UserEntity;
 import com.subscription.subscription_system.exception.CommonException;
 import com.subscription.subscription_system.service.UserService;
+import com.subscription.subscription_system.utils.JwtUtils;
 import com.subscription.subscription_system.validator.basicValidation.UserValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,18 +37,17 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/login/user")
-    public ResponseEntity<LoginResponseDto> loginUser(@RequestBody LoginRequestDto loginRequestDto) throws CommonException {
-        //Basic Validation for Login
-        log.info("Basic Validation for Login user");
-        userValidator.validateLoginUser(loginRequestDto);
+    @PostMapping("/get/userdetails")
+    public ResponseEntity<UserGetResponseDto> getUserDetails(@RequestBody UserGetRequestDto userGetRequestDto ) throws CommonException {
 
-        //Validating logging in
-        log.info("Validating for Login user");
-        UserEntity user = userService.loggingUser(loginRequestDto);
+        //Creating user
+        log.info("Getting a user details");
+        UserEntity user = userService.getUserDetails(userGetRequestDto);
 
-        LoginResponseDto response = new LoginResponseDto("Login Successfully", HttpStatus.OK.value(), user);
+        UserCreateResponseDto response = new UserCreateResponseDto( "User created successfully", HttpStatus.CREATED.value(), user);
         return ResponseEntity.ok(response);
     }
+
+
 
 }
