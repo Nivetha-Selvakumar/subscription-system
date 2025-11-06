@@ -68,5 +68,41 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    @PutMapping("/edit/{targetUserId}")
+    public ResponseEntity<UserEditResponseDto> editUser(
+            @RequestHeader String userId,
+            @PathVariable String targetUserId,
+            @RequestBody UserEditRequestDto editDto) throws CommonException {
+
+        log.info("Validating edit permission for user: {}", userId);
+        if(userId ==null || targetUserId == null){
+            throw new CommonException("UserId and Targeted User Id are Mandatory",HttpStatus.BAD_REQUEST.value());
+        }
+//        userValidator.validateEditUser(userId, targetUserId,editDto);
+
+        log.info("Editing user details for ID: {}", targetUserId);
+        UserDetailsDto updatedUser = userService.editUser(userId, targetUserId, editDto);
+
+        UserEditResponseDto response = new UserEditResponseDto(
+                "User updated successfully", HttpStatus.OK.value(), updatedUser);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/delete/{targetUserId}")
+    public ResponseEntity<CommonResponseDto> deleteUser(
+            @RequestHeader String userId,
+            @PathVariable String targetUserId) throws CommonException {
+
+        log.info("Validating delete permission for user: {}", userId);
+//        userValidator.validateSelfOrAdmin(userId, targetUserId);
+
+        log.info("Deleting user with ID: {}", targetUserId);
+        userService.deleteUser(userId, targetUserId);
+
+        CommonResponseDto response = new CommonResponseDto(
+                "User deleted successfully", HttpStatus.OK.value(),null);
+        return ResponseEntity.ok(response);
+    }
+
 
 }

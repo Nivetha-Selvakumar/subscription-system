@@ -12,5 +12,6 @@ public class RequestValidationConfig {
     RequestValidationItem adminCreate;
     RequestValidationItem userDetails;
     RequestValidationItem userList;
+    RequestValidationItem userEdit;
 
 }

@@ -63,4 +63,27 @@ public class BusinessValidation {
                     HttpStatus.BAD_REQUEST.value());
         }
     }
+
+    public UserEntity validateSelfOrAdmin(String requesterId, String targetUserId) throws CommonException {
+        Optional<UserEntity> requesterOpt = userRepo.findByIdAndStatus(requesterId, EnumStatusType.ACTIVE);
+        if (requesterOpt.isEmpty()) {
+            throw new CommonException("Invalid requester ID — user not found", HttpStatus.BAD_REQUEST.value());
+        }
+
+        UserEntity requester = requesterOpt.get();
+
+        // ✅ Allow if admin
+        if (EnumUserType.ADMIN.getValue().equalsIgnoreCase(requester.getRole().getValue())) {
+            return requester;
+        }
+
+        // ✅ Allow if editing/deleting own record
+        if (requester.getId().equals(targetUserId)) {
+            return requester;
+        }
+
+        throw new CommonException("Access denied — you cannot modify other users",
+                HttpStatus.FORBIDDEN.value());
+    }
+
 }

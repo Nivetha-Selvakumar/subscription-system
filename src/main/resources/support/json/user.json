@@ -119,5 +119,58 @@
         "displayName": "User Id"
       }
     ]
+  },
+  "userEdit": {
+    "body": [
+      {
+        "name": "firstName",
+        "required": false,
+        "maxLength": 50,
+        "format": "^[A-Za-z]+$",
+        "displayName": "First Name"
+      },
+      {
+        "name": "lastName",
+        "required": false,
+        "maxLength": 50,
+        "format": "^[A-Za-z]+$",
+        "displayName": "Last Name"
+      },
+      {
+        "name": "email",
+        "required": false,
+        "maxLength": 100,
+        "format": "^[\\w.%+-]+@[\\w.-]+\\.[A-Za-z]{2,6}$",
+        "displayName": "Email Address"
+      },
+      {
+        "name": "phoneNumber",
+        "required": false,
+        "maxLength": 15,
+        "format": "^[0-9]{10,15}$",
+        "displayName": "Phone Number"
+      },
+      {
+        "name": "address",
+        "required": false,
+        "maxLength": 150,
+        "format": null,
+        "displayName": "Address"
+      },
+      {
+        "name": "dob",
+        "required": false,
+        "maxLength": 10,
+        "format": "^\\d{4}-\\d{2}-\\d{2}$",
+        "displayName": "Date of Birth"
+      },
+      {
+        "name": "status",
+        "required": false,
+        "maxLength": 30,
+        "format": "^[A-Za-z]+$",
+        "displayName": "Status"
+      }
+    ]
   }
 }

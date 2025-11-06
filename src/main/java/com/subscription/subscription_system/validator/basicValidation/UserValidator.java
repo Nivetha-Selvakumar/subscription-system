@@ -5,6 +5,7 @@ import com.subscription.subscription_system.constants.AppFieldConstants;
 import com.subscription.subscription_system.dto.LoginRequestDto;
 import com.subscription.subscription_system.dto.UserCreateRequestDto;
 import com.subscription.subscription_system.dto.UserDetailsRequestDto;
+import com.subscription.subscription_system.dto.UserEditRequestDto;
 import com.subscription.subscription_system.exception.ApplicationErrorCode;
 import com.subscription.subscription_system.exception.CommonException;
 import com.subscription.subscription_system.exception.ErrorMessages;
@@ -244,6 +245,4 @@ public class UserValidator {
 
         return actualParameters;
     }
-
-
 }

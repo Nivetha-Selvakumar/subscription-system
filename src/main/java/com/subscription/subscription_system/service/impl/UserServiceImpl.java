@@ -3,10 +3,12 @@ package com.subscription.subscription_system.service.impl;
 import com.subscription.subscription_system.dto.UserCreateRequestDto;
 import com.subscription.subscription_system.dto.UserDetailsDto;
 import com.subscription.subscription_system.dto.UserDetailsRequestDto;
+import com.subscription.subscription_system.dto.UserEditRequestDto;
 import com.subscription.subscription_system.entity.AdminEntity;
 import com.subscription.subscription_system.entity.AuthTokenEntity;
 import com.subscription.subscription_system.entity.SubscriberEntity;
 import com.subscription.subscription_system.entity.UserEntity;
+import com.subscription.subscription_system.enumuration.EnumSexType;
 import com.subscription.subscription_system.enumuration.EnumStatusType;
 import com.subscription.subscription_system.enumuration.EnumUserType;
 import com.subscription.subscription_system.exception.CommonException;
@@ -19,6 +21,7 @@ import com.subscription.subscription_system.service.UserService;
 import com.subscription.subscription_system.utils.JwtUtils;
 import com.subscription.subscription_system.utils.QueryUtils;
 import com.subscription.subscription_system.validation.BusinessValidation;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
@@ -27,9 +30,11 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Component
 public class UserServiceImpl implements UserService {
 
@@ -143,4 +148,134 @@ public class UserServiceImpl implements UserService {
                 })
                 .toList();
     }
+
+    @Override
+    public UserDetailsDto editUser(String requesterId, String targetUserId, UserEditRequestDto editDto) throws CommonException {
+        // Validate permission
+        UserEntity requester = businessValidation.validateSelfOrAdmin(requesterId, targetUserId);
+
+        Optional<UserEntity> targetUserOpt = userRepo.findById(targetUserId);
+        if (targetUserOpt.isEmpty()) {
+            throw new CommonException("Target user not found", HttpStatus.BAD_REQUEST.value());
+        }
+
+        UserEntity targetUser = targetUserOpt.get();
+
+        // 2️⃣ Prevent email change (since frontend sends all fields)
+        if (editDto.getEmail() != null && !editDto.getEmail().equalsIgnoreCase(targetUser.getEmail())) {
+            throw new CommonException("Email field cannot be modified", HttpStatus.BAD_REQUEST.value());
+        }
+
+        // 3️⃣ Update common user fields
+        if (editDto.getFirstName() != null) targetUser.setFirstName(editDto.getFirstName());
+        if (editDto.getLastName() != null) targetUser.setLastName(editDto.getLastName());
+        if (editDto.getAddress() != null) targetUser.setAddress(editDto.getAddress());
+        if (editDto.getDateOfBirth() != null) targetUser.setDob(editDto.getDateOfBirth());
+        if (editDto.getPhoneNumber() != null) targetUser.setPhoneNumber(editDto.getPhoneNumber());
+        if (editDto.getSex() != null) targetUser.setSex(EnumSexType.fromValue(editDto.getSex()));
+        if (editDto.getStatus() != null) targetUser.setStatus(EnumStatusType.fromValue(editDto.getStatus()));
+
+        userRepo.save(targetUser); // save user part first
+
+        // 4️⃣ Role-based additional updates
+        String role = targetUser.getRole().getValue().toLowerCase();
+
+        AdminEntity adminEntity = null;
+        SubscriberEntity subscriberEntity = null;
+
+        if (requester.getRole().equals(EnumUserType.ADMIN) && !Objects.equals(requester.getId(), targetUser.getId())
+                && editDto.getRole() != null) {
+            targetUser.setRole(EnumUserType.valueOf(editDto.getRole()));
+        }
+
+
+        switch (role) {
+            case "admin":
+                adminEntity = adminRepo.findByUser(targetUser);
+                if (adminEntity == null) {
+                    adminEntity = new AdminEntity();
+                    adminEntity.setUser(targetUser);
+                }
+                adminEntity.setSalary(editDto.getSalary());
+                adminRepo.save(adminEntity);
+                break;
+
+            case "subscriber":
+                subscriberEntity = subscriberRepo.findByUser(targetUser);
+                if (subscriberEntity == null) {
+                    subscriberEntity = new SubscriberEntity();
+                    subscriberEntity.setUser(targetUser);
+                }
+                subscriberEntity.setCurrentSubStatus(editDto.getCurrentSubStatus());
+                subscriberEntity.setSubStartDate(editDto.getSubStartDate());
+                subscriberEntity.setSubEndDate(editDto.getSubEndDate());
+                subscriberEntity.setJoinDate(editDto.getJoinDate());
+                subscriberRepo.save(subscriberEntity);
+                break;
+
+            default:
+                // USER has only UserEntity fields
+                break;
+        }
+
+        // 5️⃣ Return response DTO
+        return userMapper.mapUserDetails(targetUser, adminEntity, subscriberEntity);
+    }
+
+
+    @Override
+    public void deleteUser(String requesterId, String targetUserId) throws CommonException {
+        // 1️⃣ Validate requester (only self or admin can delete)
+        UserEntity requester = businessValidation.validateSelfOrAdmin(requesterId, targetUserId);
+
+        // 2️⃣ Validate target user exists and active
+        Optional<UserEntity> userOpt = userRepo.findByIdAndStatus(targetUserId, EnumStatusType.ACTIVE);
+        if (userOpt.isEmpty()) {
+            throw new CommonException("User not found or already inactive", HttpStatus.BAD_REQUEST.value());
+        }
+
+        UserEntity targetUser = userOpt.get();
+        String role = targetUser.getRole().getValue().toLowerCase();
+
+        log.info("Deleting user [{}] with role [{}]", targetUser.getEmail(), role);
+
+        // 3️⃣ Soft delete main user (set INACTIVE)
+        targetUser.setStatus(EnumStatusType.INACTIVE);
+        userRepo.save(targetUser);
+
+        // 4️⃣ Cascade delete (soft or hard) based on role
+        switch (role) {
+            case "admin":
+                Optional<AdminEntity> adminOpt = adminRepo.findByUserAndStatus(targetUser, EnumStatusType.ACTIVE);
+                if (adminOpt.isPresent()) {
+                    AdminEntity adminEntity = adminOpt.get();
+                    // Option 1 (Soft Delete)
+                    adminEntity.setStatus(EnumStatusType.INACTIVE);
+                    adminRepo.save(adminEntity);
+                    log.info("Admin entity soft-deleted for user: {}", targetUser.getEmail());
+                }
+                break;
+
+            case "subscriber":
+                Optional<SubscriberEntity> subscriberOpt = subscriberRepo.findByUserAndStatus(targetUser, EnumStatusType.ACTIVE);
+                if (subscriberOpt.isPresent()) {
+                    SubscriberEntity subscriberEntity = subscriberOpt.get();
+                    // Option 1 (Soft Delete)
+                    subscriberEntity.setStatus(EnumStatusType.INACTIVE);
+                    subscriberRepo.save(subscriberEntity);
+
+                    log.info("Subscriber entity soft-deleted for user: {}", targetUser.getEmail());
+                }
+                break;
+
+            default:
+                // Normal user → only main user entity is updated
+                log.info("Normal user [{}] deleted (soft)", targetUser.getEmail());
+                break;
+        }
+
+        log.info("✅ User deletion completed for targetUserId: {}", targetUserId);
+    }
+
+
 }
