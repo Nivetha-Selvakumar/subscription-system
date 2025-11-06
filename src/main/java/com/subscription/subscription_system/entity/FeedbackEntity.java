@@ -1,5 +1,6 @@
 package com.subscription.subscription_system.entity;
 
+import com.subscription.subscription_system.enumuration.EnumStatusType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,4 +29,7 @@ public class FeedbackEntity {
 
     @Field("comments")
     private String comments; // feedback or suggestions
+
+    @Field("status")
+    private EnumStatusType status;
 }

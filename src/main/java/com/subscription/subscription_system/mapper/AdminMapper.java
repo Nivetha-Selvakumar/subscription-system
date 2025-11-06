@@ -3,6 +3,7 @@ package com.subscription.subscription_system.mapper;
 import com.subscription.subscription_system.dto.AdminCreateRequestDto;
 import com.subscription.subscription_system.entity.AdminEntity;
 import com.subscription.subscription_system.entity.UserEntity;
+import com.subscription.subscription_system.enumuration.EnumStatusType;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -15,6 +16,7 @@ public class AdminMapper {
                         ? Double.parseDouble(adminCreateDto.getSalary())
                         : 0.0
         );
+        adminEntity.setStatus(EnumStatusType.ACTIVE);
         return adminEntity;
     }
 }

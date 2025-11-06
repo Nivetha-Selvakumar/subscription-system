@@ -2,6 +2,7 @@ package com.subscription.subscription_system.entity;
 
 
 import com.subscription.subscription_system.enumuration.EnumSexType;
+import com.subscription.subscription_system.enumuration.EnumStatusType;
 import com.subscription.subscription_system.enumuration.EnumUserType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -46,4 +47,7 @@ public class UserEntity {
 
     @Field("role")
     private EnumUserType role;
+
+    @Field("status")
+    private EnumStatusType status;
 }

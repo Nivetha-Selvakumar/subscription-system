@@ -1,10 +1,12 @@
 package com.subscription.subscription_system.repository;
 
 import com.subscription.subscription_system.entity.UserEntity;
+import com.subscription.subscription_system.enumuration.EnumStatusType;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface UserRepo extends MongoRepository<UserEntity, String> {
@@ -16,4 +18,7 @@ public interface UserRepo extends MongoRepository<UserEntity, String> {
     // Or list by role (Admin / Subscriber)
     List<UserEntity> findAllByRole(String role);
 
+    Optional<UserEntity> findByEmailAndId(String email, String userId);
+
+    Optional<UserEntity> findByIdAndStatus(String userId, EnumStatusType enumStatusType);
 }

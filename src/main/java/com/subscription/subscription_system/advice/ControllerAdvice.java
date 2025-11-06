@@ -2,6 +2,8 @@ package com.subscription.subscription_system.advice;
 
 import com.subscription.subscription_system.constants.AppConstant;
 import com.subscription.subscription_system.exception.CommonException;
+import com.subscription.subscription_system.exception.ValidationException;
+import com.subscription.subscription_system.validator.ValidationError;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -25,6 +27,14 @@ public class ControllerAdvice {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(CommonException.class)
     public Map<String,String> commonException(CommonException error){
+        Map<String,String> errObj = new HashMap<>();
+        errObj.put(AppConstant.ERROR,error.getMessage());
+        return errObj;
+    }
+
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(ValidationException.class)
+    public Map<String,String> validationError(ValidationError error){
         Map<String,String> errObj = new HashMap<>();
         errObj.put(AppConstant.ERROR,error.getMessage());
         return errObj;

@@ -1,5 +1,6 @@
 package com.subscription.subscription_system.entity;
 
+import com.subscription.subscription_system.enumuration.EnumStatusType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,10 +20,13 @@ public class AdminEntity {
     @Id
     private String id;
 
-    @DBRef
+    @DBRef(lazy = true)
     @Field("user_id")
     private UserEntity user;
 
     @Field("salary")
     private Double salary;
+
+    @Field("status")
+    private EnumStatusType status;
 }

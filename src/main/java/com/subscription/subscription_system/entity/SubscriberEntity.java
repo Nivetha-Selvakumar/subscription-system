@@ -1,5 +1,6 @@
 package com.subscription.subscription_system.entity;
 
+import com.subscription.subscription_system.enumuration.EnumStatusType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,7 +20,7 @@ public class SubscriberEntity {
     @Id
     private String id;
 
-    @DBRef
+    @DBRef(lazy = true)
     @Field("user_id")
     private UserEntity user;
 
@@ -34,4 +35,7 @@ public class SubscriberEntity {
 
     @Field("join_dt")
     private String joinDate;
+
+    @Field("status")
+    private EnumStatusType status;
 }

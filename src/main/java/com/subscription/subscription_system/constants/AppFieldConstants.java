@@ -18,5 +18,8 @@ public class AppFieldConstants {
     // For Admin
     public static final String SALARY = "salary";
 
+    // For User details
+    public static final String USERID = "userId";
+
 
 }

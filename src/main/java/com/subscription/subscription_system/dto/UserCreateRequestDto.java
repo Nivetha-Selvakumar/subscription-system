@@ -13,4 +13,5 @@ public class UserCreateRequestDto {
     private String phoneNumber;
     private String sex;
     private String role;
+    private String status;
 }

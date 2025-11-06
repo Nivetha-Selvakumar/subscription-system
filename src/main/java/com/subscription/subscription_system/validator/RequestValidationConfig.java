@@ -10,5 +10,7 @@ public class RequestValidationConfig {
     RequestValidationItem userCreate;
     RequestValidationItem userLogin;
     RequestValidationItem adminCreate;
+    RequestValidationItem userDetails;
+    RequestValidationItem userList;
 
 }

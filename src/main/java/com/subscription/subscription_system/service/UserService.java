@@ -1,14 +1,19 @@
 package com.subscription.subscription_system.service;
 
 import com.subscription.subscription_system.dto.UserCreateRequestDto;
-import com.subscription.subscription_system.dto.UserGetRequestDto;
-import com.subscription.subscription_system.entity.UserEntity;
+import com.subscription.subscription_system.dto.UserDetailsDto;
+import com.subscription.subscription_system.dto.UserDetailsRequestDto;
+import com.subscription.subscription_system.entity.AuthTokenEntity;
 import com.subscription.subscription_system.exception.CommonException;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 public interface UserService{
-    UserEntity createUser(UserCreateRequestDto userCreateDto) throws CommonException;
+    AuthTokenEntity createUser(UserCreateRequestDto userCreateDto) throws CommonException;
 
-    UserEntity getUserDetails(UserGetRequestDto userGetRequestDto);
+    UserDetailsDto getUserDetails(UserDetailsRequestDto userDetails) throws CommonException;
+
+    List<UserDetailsDto> getUsersList(String userId, String search, String filterBy, String sortBy, String sortDir) throws CommonException;
 }
