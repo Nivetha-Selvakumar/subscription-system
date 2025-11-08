@@ -7,11 +7,13 @@ import org.springframework.stereotype.Component;
 @Data
 public class RequestValidationConfig {
 
+    RequestValidationItem userSignup;
     RequestValidationItem userCreate;
     RequestValidationItem userLogin;
     RequestValidationItem adminCreate;
     RequestValidationItem userDetails;
     RequestValidationItem userList;
     RequestValidationItem userEdit;
+    RequestValidationItem userDelete;
 
 }

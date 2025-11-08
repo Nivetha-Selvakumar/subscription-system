@@ -11,6 +11,8 @@ import com.subscription.subscription_system.enumuration.EnumStatusType;
 import com.subscription.subscription_system.enumuration.EnumUserType;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+
 @Component
 public class UserMapper {
 
@@ -30,6 +32,13 @@ public class UserMapper {
                         : EnumUserType.USER
         );
         userEntity.setStatus(EnumStatusType.ACTIVE);
+        // ✅ For signup flow (self-created)
+        userEntity.setCreatedBy("SELF");
+        userEntity.setUpdatedBy("SELF");
+        userEntity.setJoinDate(LocalDateTime.now());
+        userEntity.setCreatedAt(LocalDateTime.now());
+        userEntity.setUpdatedAt(LocalDateTime.now());
+
         return userEntity;
     }
 

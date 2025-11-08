@@ -52,7 +52,8 @@ public class AuthServiceImpl implements AuthService {
                 authTokenRepo.findByUserAndStatus(user, EnumStatusType.ACTIVE.getName());
 
         if (existingActiveToken.isPresent()) {
-            throw new CommonException("User Already Login in another device", HttpStatus.BAD_REQUEST.value());
+            existingActiveToken.get().setAuthToken(EnumStatusType.INACTIVE.getName());
+            authTokenRepo.save(existingActiveToken.get());
         }
 
         // Step 4: Generate new JWT

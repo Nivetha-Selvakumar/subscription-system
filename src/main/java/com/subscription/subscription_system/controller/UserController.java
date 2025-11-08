@@ -2,6 +2,7 @@ package com.subscription.subscription_system.controller;
 
 import com.subscription.subscription_system.dto.*;
 import com.subscription.subscription_system.entity.AuthTokenEntity;
+import com.subscription.subscription_system.entity.UserEntity;
 import com.subscription.subscription_system.exception.CommonException;
 import com.subscription.subscription_system.service.UserService;
 import com.subscription.subscription_system.validator.basicValidation.UserValidator;
@@ -24,21 +25,21 @@ public class UserController {
     @Autowired
     UserValidator userValidator;
 
-    @PostMapping("/create/user")
-    public ResponseEntity<UserCreateResponseDto> createUser(@RequestBody UserCreateRequestDto userCreateDto) throws CommonException {
+    @PostMapping("/signup/user")
+    public ResponseEntity<UserCreateResponseDto> signUpUser(@RequestBody UserCreateRequestDto userCreateDto) throws CommonException {
         //Basic Validation for creating user
-        log.info("Basic Validation for creating a user");
-        userValidator.validateUserCreate(userCreateDto);
+        log.info("Basic Validation for signing up user");
+        userValidator.validateUserSignup(userCreateDto);
         //Creating user
-        log.info("Creating a user");
-        AuthTokenEntity user = userService.createUser(userCreateDto);
+        log.info("Creating a new user self");
+        AuthTokenEntity user = userService.signUpUser(userCreateDto);
 
-        UserCreateResponseDto response = new UserCreateResponseDto( "User created successfully", HttpStatus.CREATED.value(), user);
+        UserCreateResponseDto response = new UserCreateResponseDto("User created successfully", HttpStatus.CREATED.value(), user);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/get/userdetails")
-    public ResponseEntity<UserDetailsResponseDto> getUserDetails(@RequestBody UserDetailsRequestDto userDetails ) throws CommonException {
+    public ResponseEntity<UserDetailsResponseDto> getUserDetails(@RequestBody UserDetailsRequestDto userDetails) throws CommonException {
 
         log.info("Basic Validation for getting user details");
         userValidator.validateUserDetails(userDetails);
@@ -47,38 +48,40 @@ public class UserController {
         log.info("Getting a user details");
         UserDetailsDto user = userService.getUserDetails(userDetails);
 
-        UserDetailsResponseDto response = new UserDetailsResponseDto( "Got User details successfully", HttpStatus.OK.value(), user);
+        UserDetailsResponseDto response = new UserDetailsResponseDto("Got User details successfully", HttpStatus.OK.value(), user);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/get/users")
-    public ResponseEntity<UserGetResponseDto> getUsers( @RequestHeader("User-Id") String userId,
-                                                        @RequestParam(required = false) String search,
-                                                        @RequestParam(required = false) String filterBy,  // format: key:value,key:value
-                                                        @RequestParam(required = false, defaultValue = "firstName") String sortBy,
-                                                        @RequestParam(required = false, defaultValue = "asc") String sortDir) throws CommonException {
+    public ResponseEntity<UserGetResponseDto> getUsers(@RequestHeader("User-Id") String userId,
+                                                       @RequestParam(required = false) String search,
+                                                       @RequestParam(required = false) String filterBy,  // format: key:value,key:value
+                                                       @RequestParam(required = false, defaultValue = "firstName") String sortBy,
+                                                       @RequestParam(required = false, defaultValue = "asc") String sortDir,
+                                                       @RequestParam(required = false, defaultValue = "0") int offset,
+                                                       @RequestParam(required = false, defaultValue = "10") int limit) throws CommonException {
         log.info("Basic validation for getting user details");
         userValidator.validateUserList(userId);
 
         // Fetch user details
         log.info("Fetching user details list");
-        List<UserDetailsDto> users = userService.getUsersList(userId, search, filterBy, sortBy, sortDir);
+        List<UserDetailsDto> users = userService.getUsersList(userId, search, filterBy, sortBy, sortDir, offset, limit);
 
-        UserGetResponseDto response = new UserGetResponseDto( "Got User Data successfully", HttpStatus.OK.value(), users);
+        UserGetResponseDto response = new UserGetResponseDto("Got User Data successfully", HttpStatus.OK.value(), users);
         return ResponseEntity.ok(response);
     }
 
     @PutMapping("/edit/{targetUserId}")
     public ResponseEntity<UserEditResponseDto> editUser(
-            @RequestHeader String userId,
+            @RequestHeader("User-Id") String userId,
             @PathVariable String targetUserId,
             @RequestBody UserEditRequestDto editDto) throws CommonException {
 
         log.info("Validating edit permission for user: {}", userId);
-        if(userId ==null || targetUserId == null){
-            throw new CommonException("UserId and Targeted User Id are Mandatory",HttpStatus.BAD_REQUEST.value());
+        if (userId == null || targetUserId == null) {
+            throw new CommonException("UserId and Targeted User Id are Mandatory", HttpStatus.BAD_REQUEST.value());
         }
-//        userValidator.validateEditUser(userId, targetUserId,editDto);
+        userValidator.validateEditUser(userId, targetUserId,editDto);
 
         log.info("Editing user details for ID: {}", targetUserId);
         UserDetailsDto updatedUser = userService.editUser(userId, targetUserId, editDto);
@@ -94,13 +97,26 @@ public class UserController {
             @PathVariable String targetUserId) throws CommonException {
 
         log.info("Validating delete permission for user: {}", userId);
-//        userValidator.validateSelfOrAdmin(userId, targetUserId);
+        userValidator.validateDeleteUser(userId, targetUserId);
 
         log.info("Deleting user with ID: {}", targetUserId);
         userService.deleteUser(userId, targetUserId);
 
         CommonResponseDto response = new CommonResponseDto(
-                "User deleted successfully", HttpStatus.OK.value(),null);
+                "User deleted successfully", HttpStatus.OK.value(), null);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/create/user")
+    public ResponseEntity<UserCreateResponseDto> createUser(@RequestBody UserCreateRequestDto userCreateDto, @RequestParam("User-Id") String userId) throws CommonException {
+        //Basic Validation for creating user
+        log.info("Basic Validation for creating a user");
+        userValidator.validateUserCreate(userCreateDto,userId);
+        //Creating user
+        log.info("Creating a user");
+        UserEntity user = userService.createUser(userCreateDto,userId);
+
+        UserCreateResponseDto response = new UserCreateResponseDto("User created successfully", HttpStatus.CREATED.value(), user);
         return ResponseEntity.ok(response);
     }
 

@@ -9,6 +9,8 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
+import java.time.LocalDateTime;
+
 @Document(collection = "Support_Ticket")
 @Getter
 @Setter
@@ -34,4 +36,10 @@ public class SupportTicketEntity {
 
     @Field("updated_at")
     private String updateAt;
+
+    @Field("created_by")
+    private String createdBy;
+
+    @Field("updated_by")
+    private String updatedBy;
 }

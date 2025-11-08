@@ -63,7 +63,7 @@ public class UserServiceImpl implements UserService {
     MongoTemplate mongoTemplate;
 
     @Override
-    public AuthTokenEntity createUser(UserCreateRequestDto userCreateDto) throws CommonException {
+    public AuthTokenEntity signUpUser(UserCreateRequestDto userCreateDto) throws CommonException {
 
         //check duplicate email
         businessValidation.getUserByEmail(userCreateDto.getEmail());
@@ -82,13 +82,6 @@ public class UserServiceImpl implements UserService {
         tokenEntity.setStatus(EnumStatusType.ACTIVE.getName());
         authTokenRepo.save(tokenEntity);
 
-//       if (Objects.equals(userCreateDto.getRole(), EnumUserType.SUBSCRIBER.getValue())) {
-//            SubscriberEntity subscriberEntity = new SubscriberEntity();
-//            subscriberEntity.setUser(userEntity);
-//            subscriberEntity.setCurrentSubStatus("Inactive");
-//            subscriberEntity.setJoinDate(LocalDateTime.now().toString());
-//            subscriberRepo.save(subscriberEntity);
-//        }
         //Return user values
         return (tokenEntity);
     }
@@ -119,15 +112,20 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<UserDetailsDto> getUsersList(String userId, String search, String filterBy, String sortBy, String sortDir) throws CommonException {
+    public List<UserDetailsDto> getUsersList(String userId, String search, String filterBy, String sortBy, String sortDir, int offset, int limit) throws CommonException {
         // 1️⃣ Validate Admin Access
         businessValidation.validateUserList(userId);
 
         // 2️⃣ Build Mongo query dynamically
         Query query = QueryUtils.buildUserQuery(search, filterBy, sortBy, sortDir);
+
+        // 3️⃣ Add pagination
+        query.skip(offset).limit(limit);
+
+        // 4️⃣ Fetch Users
         List<UserEntity> users = mongoTemplate.find(query, UserEntity.class);
 
-        // 3️⃣ Preload Admin and Subscriber data
+        // 5️⃣ Preload Admin & Subscriber entities
         List<AdminEntity> admins = mongoTemplate.findAll(AdminEntity.class);
         List<SubscriberEntity> subscribers = mongoTemplate.findAll(SubscriberEntity.class);
 
@@ -139,7 +137,7 @@ public class UserServiceImpl implements UserService {
                 .filter(s -> s.getUser() != null)
                 .collect(Collectors.toMap(s -> s.getUser().getId(), s -> s));
 
-        // 4️⃣ Map Data
+        // 6️⃣ Map all data
         return users.stream()
                 .map(user -> {
                     AdminEntity adminEntity = adminMap.get(user.getId());
@@ -275,6 +273,19 @@ public class UserServiceImpl implements UserService {
         }
 
         log.info("✅ User deletion completed for targetUserId: {}", targetUserId);
+    }
+
+    @Override
+    public UserEntity createUser(UserCreateRequestDto userCreateDto, String userId) throws CommonException {
+
+        //check duplicate email
+        businessValidation.getUserByEmail(userCreateDto.getEmail());
+
+        // Save User
+        UserEntity userEntity = userMapper.mapUserDtoToUserEntity(userCreateDto);
+        userRepo.save(userEntity);
+
+        return null;
     }
 
 

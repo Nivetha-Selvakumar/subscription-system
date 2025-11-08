@@ -14,12 +14,17 @@ public class AppFieldConstants {
     public static final String SEX = "sex";
     public static final String ROLE = "role";
     public static final String PASSWORD = "password";
+    public static final String STATUS = "status";
 
     // For Admin
     public static final String SALARY = "salary";
 
     // For User details
     public static final String USERID = "userId";
+
+
+    // Edit User
+    public static final String TARGET_ID = "targetId";
 
 
 }

@@ -9,6 +9,8 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
+import java.time.LocalDateTime;
+
 @Document(collection = "Payment")
 @Getter
 @Setter
@@ -35,4 +37,19 @@ public class PaymentEntity {
 
     @Field("payment_status")
     private String paymentStatus;
+
+    @Field("status")
+    private String status;
+
+    @Field("created_at")
+    private LocalDateTime createdAt;
+
+    @Field("updated_at")
+    private LocalDateTime updatedAt;
+
+    @Field("created_by")
+    private String createdBy;
+
+    @Field("updated_by")
+    private String updatedBy;
 }

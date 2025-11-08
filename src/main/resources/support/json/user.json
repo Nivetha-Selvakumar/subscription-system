@@ -1,5 +1,5 @@
 {
-  "userCreate": {
+  "userSignup": {
     "body": [
       {
         "name": "firstName",
@@ -73,8 +73,92 @@
       }
     ]
   },
+  "userCreate": {
+    "queryParam": [
+      {
+        "name": "userId",
+        "required": true,
+        "maxLength": 25,
+        "format": null,
+        "displayName": "User Id"
+      }
+    ],
+    "body": [
+      {
+        "name": "firstName",
+        "required": true,
+        "maxLength": 50,
+        "format": "^[A-Za-z]+$",
+        "displayName": "First Name"
+      },
+      {
+        "name": "lastName",
+        "required": true,
+        "maxLength": 50,
+        "format": "^[A-Za-z]+$",
+        "displayName": "Last Name"
+      },
+      {
+        "name": "email",
+        "required": true,
+        "maxLength": 100,
+        "format": "^[\\w.%+-]+@[\\w.-]+\\.[A-Za-z]{2,6}$",
+        "displayName": "Email Address"
+      },
+      {
+        "name": "password",
+        "required": true,
+        "maxLength": 25,
+        "format": "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,100}$",
+        "displayName": "Password"
+      },
+      {
+        "name": "address",
+        "required": false,
+        "maxLength": 150,
+        "format": null,
+        "displayName": "Address"
+      },
+      {
+        "name": "dateOfBirth",
+        "required": false,
+        "maxLength": 10,
+        "format": "^\\d{4}-\\d{2}-\\d{2}$",
+        "displayName": "Date of Birth"
+      },
+      {
+        "name": "phoneNumber",
+        "required": true,
+        "maxLength": 15,
+        "format": "^[0-9]{10,15}$",
+        "displayName": "Phone Number"
+      },
+      {
+        "name": "sex",
+        "required": true,
+        "maxLength": 6,
+        "format": "^(MALE|FEMALE|OTHER)$",
+        "displayName": "Sex"
+      },
+      {
+        "name": "role",
+        "required": false,
+        "maxLength": 30,
+        "format": "^[A-Za-z]+$",
+        "displayName": "Role"
+      },
+      {
+        "name": "status",
+        "required": false,
+        "maxLength": 30,
+        "format": "^[A-Za-z]+$",
+        "displayName": "Status"
+      }
+    ]
+  },
+
   "userLogin": {
-    "body" : [
+    "body": [
       {
         "name": "email",
         "required": true,
@@ -92,7 +176,7 @@
     ]
   },
   "userDetails": {
-    "body" : [
+    "body": [
       {
         "name": "email",
         "required": true,
@@ -110,7 +194,7 @@
     ]
   },
   "userList": {
-    "header" : [
+    "header": [
       {
         "name": "userId",
         "required": true,
@@ -121,6 +205,24 @@
     ]
   },
   "userEdit": {
+    "header": [
+      {
+        "name": "userId",
+        "required": true,
+        "maxLength": 25,
+        "format": null,
+        "displayName": "User Id"
+      }
+    ],
+    "pathVariable": [
+      {
+        "name": "targetUserId",
+        "required": true,
+        "maxLength": 25,
+        "format": null,
+        "displayName": "Target User Id"
+      }
+    ],
     "body": [
       {
         "name": "firstName",
@@ -170,6 +272,26 @@
         "maxLength": 30,
         "format": "^[A-Za-z]+$",
         "displayName": "Status"
+      }
+    ]
+  },
+  "userDelete": {
+    "header": [
+      {
+        "name": "userId",
+        "required": true,
+        "maxLength": 25,
+        "format": null,
+        "displayName": "User Id"
+      }
+    ],
+    "pathVariable": [
+      {
+        "name": "targetUserId",
+        "required": true,
+        "maxLength": 25,
+        "format": null,
+        "displayName": "Target User Id"
       }
     ]
   }

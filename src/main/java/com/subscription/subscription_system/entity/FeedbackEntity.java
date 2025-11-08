@@ -10,6 +10,8 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
+import java.time.LocalDateTime;
+
 @Document(collection = "Feedback")
 @Getter
 @Setter
@@ -32,4 +34,16 @@ public class FeedbackEntity {
 
     @Field("status")
     private EnumStatusType status;
+
+    @Field("created_at")
+    private LocalDateTime createdAt;
+
+    @Field("updated_at")
+    private LocalDateTime updatedAt;
+
+    @Field("created_by")
+    private String createdBy;
+
+    @Field("updated_by")
+    private String updatedBy;
 }

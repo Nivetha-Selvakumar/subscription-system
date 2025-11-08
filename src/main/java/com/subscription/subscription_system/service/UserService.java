@@ -5,6 +5,7 @@ import com.subscription.subscription_system.dto.UserDetailsDto;
 import com.subscription.subscription_system.dto.UserDetailsRequestDto;
 import com.subscription.subscription_system.dto.UserEditRequestDto;
 import com.subscription.subscription_system.entity.AuthTokenEntity;
+import com.subscription.subscription_system.entity.UserEntity;
 import com.subscription.subscription_system.exception.CommonException;
 import org.springframework.stereotype.Component;
 
@@ -12,13 +13,15 @@ import java.util.List;
 
 @Component
 public interface UserService{
-    AuthTokenEntity createUser(UserCreateRequestDto userCreateDto) throws CommonException;
+    AuthTokenEntity signUpUser(UserCreateRequestDto userCreateDto) throws CommonException;
 
     UserDetailsDto getUserDetails(UserDetailsRequestDto userDetails) throws CommonException;
 
-    List<UserDetailsDto> getUsersList(String userId, String search, String filterBy, String sortBy, String sortDir) throws CommonException;
+    List<UserDetailsDto> getUsersList(String userId, String search, String filterBy, String sortBy, String sortDir, int offset,int limit) throws CommonException;
 
     UserDetailsDto editUser(String userId, String targetUserId, UserEditRequestDto editDto) throws CommonException;
 
     void deleteUser(String userId, String targetUserId) throws CommonException;
+
+    UserEntity createUser(UserCreateRequestDto userCreateDto, String userId) throws CommonException;
 }
