@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -39,21 +40,28 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthTokenEntity loggingUser(LoginRequestDto loginRequestDto) throws CommonException {
         UserEntity user = userRepo.findByEmail(loginRequestDto.getEmail());
-        if(user == null ){
+        if (user == null) {
             throw new CommonException("User does not exist", HttpStatus.CONFLICT.value());
         }
 
-        if(!user.getPassword().equals(loginRequestDto.getPassword())){
+        if (!user.getPassword().equals(loginRequestDto.getPassword())) {
             throw new CommonException("Password doesn't match", HttpStatus.BAD_REQUEST.value());
         }
 
         // Step 3: Check for existing active token
-        Optional<AuthTokenEntity> existingActiveToken =
-                authTokenRepo.findByUserAndStatus(user, EnumStatusType.ACTIVE.getName());
+//        Optional<AuthTokenEntity> existingActiveToken =
+//                authTokenRepo.findByUserAndStatus(user, EnumStatusType.ACTIVE.getName());
 
-        if (existingActiveToken.isPresent()) {
-            existingActiveToken.get().setAuthToken(EnumStatusType.INACTIVE.getName());
-            authTokenRepo.save(existingActiveToken.get());
+//        if (existingActiveToken.isPresent()) {
+//            existingActiveToken.get().setStatus(EnumStatusType.INACTIVE.getName());
+//            authTokenRepo.save(existingActiveToken.get());
+//        }
+
+        List<AuthTokenEntity> activeTokens =
+                authTokenRepo.findAllByUserAndStatus(user, EnumStatusType.ACTIVE.getName());
+        if(!activeTokens.isEmpty()){
+            activeTokens.forEach(t -> t.setStatus(EnumStatusType.INACTIVE.getName()));
+            authTokenRepo.saveAll(activeTokens);
         }
 
         // Step 4: Generate new JWT
@@ -95,17 +103,20 @@ public class AuthServiceImpl implements AuthService {
                 throw new CommonException("User not found", HttpStatus.NOT_FOUND.value());
             }
 
-            // 🔹 4. Find active auth token for user
-            Optional<AuthTokenEntity> activeToken = authTokenRepo.findByUserAndStatus(user, EnumStatusType.ACTIVE.getName());
+//            // 🔹 4. Find active auth token for user
+//            Optional<AuthTokenEntity> activeToken = authTokenRepo.findByUserAndStatus(user, EnumStatusType.ACTIVE.getName());
 
-            if (activeToken.isPresent()) {
-                AuthTokenEntity entity = activeToken.get();
-                entity.setStatus(EnumStatusType.INACTIVE.getName());
-                authTokenRepo.save(entity);
+            List<AuthTokenEntity> activeTokens =
+                    authTokenRepo.findAllByUserAndStatus(user, EnumStatusType.ACTIVE.getName());
 
-                log.info("✅ User '{}' logged out successfully", email);
-            } else {
+            if (activeTokens.isEmpty()) {
+                log.warn("⚠️ No active session found for user {}", email);
                 throw new CommonException("No active session found for this user", HttpStatus.BAD_REQUEST.value());
+            } else {
+                activeTokens.forEach(t -> t.setStatus(EnumStatusType.INACTIVE.getName()));
+                authTokenRepo.saveAll(activeTokens);
+
+                log.info("✅ {} token(s) deactivated for user {}", activeTokens.size(), email);
             }
 
         } catch (ExpiredJwtException e) {
