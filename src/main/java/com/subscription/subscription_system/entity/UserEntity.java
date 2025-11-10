@@ -54,9 +54,6 @@ public class UserEntity {
     @Field("status")
     private EnumStatusType status;
 
-    @Field("join_date")
-    private LocalDateTime joinDate;
-
     @Field("created_at")
     private LocalDateTime createdAt;
 

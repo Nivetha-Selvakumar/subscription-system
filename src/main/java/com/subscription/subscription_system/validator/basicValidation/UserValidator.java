@@ -2,10 +2,7 @@ package com.subscription.subscription_system.validator.basicValidation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.subscription.subscription_system.constants.AppFieldConstants;
-import com.subscription.subscription_system.dto.LoginRequestDto;
-import com.subscription.subscription_system.dto.UserCreateRequestDto;
-import com.subscription.subscription_system.dto.UserDetailsRequestDto;
-import com.subscription.subscription_system.dto.UserEditRequestDto;
+import com.subscription.subscription_system.dto.*;
 import com.subscription.subscription_system.exception.ApplicationErrorCode;
 import com.subscription.subscription_system.exception.CommonException;
 import com.subscription.subscription_system.exception.ErrorMessages;
@@ -46,7 +43,7 @@ public class UserValidator {
                 RequestValidationConfig.class);
     }
 
-    public void validateUserSignup(UserCreateRequestDto input) throws CommonException {
+    public void validateUserSignup(SignupRequestDto input) throws CommonException {
         Map<String, String> actualParameters = getUserSignupParams(input);
 
         log.trace("Validate mandatory field for Signup User ");
@@ -54,7 +51,7 @@ public class UserValidator {
                 .filter(a -> a.getDisplayName() != null)
                 .collect(Collectors.toMap(RequestComponent::getName, RequestComponent::getDisplayName));
 
-        Set<String> mandatoryHeader = requestValidationConfig.getUserCreate().getBody().stream()
+        Set<String> mandatoryHeader = requestValidationConfig.getUserSignup().getBody().stream()
                 .filter(RequestComponent::getRequired).map(RequestComponent::getName).collect(Collectors.toSet());
 
         ValidationError validationError = CommonRequestValidator.validateMandatoryFields(actualParameters,
@@ -87,7 +84,7 @@ public class UserValidator {
         }
     }
 
-    private static Map<String, String> getUserSignupParams(UserCreateRequestDto input) {
+    private static Map<String, String> getUserSignupParams(SignupRequestDto input) {
         Map<String, String> actualParameters = new HashMap<>();
         actualParameters.put(AppFieldConstants.FIRST_NAME, input.getFirstName());
         actualParameters.put(AppFieldConstants.LAST_NAME, input.getLastName());
@@ -520,7 +517,7 @@ public class UserValidator {
                     HttpStatus.BAD_REQUEST.value());
         }
 
-        log.trace("Validate mandatory field for Queryparam create User ");
+        log.trace("Validate mandatory field for Query param create User ");
         Map<String, String> formatMapDisplayNameQueryParam = requestValidationConfig.getUserCreate().getQueryParam().stream()
                 .filter(a -> a.getDisplayName() != null)
                 .collect(Collectors.toMap(RequestComponent::getName, RequestComponent::getDisplayName));
@@ -536,7 +533,7 @@ public class UserValidator {
                     HttpStatus.BAD_REQUEST.value());
         }
 
-        log.trace("Validate Field size for creating User");
+        log.trace("Validate Field size for Query param creating User");
         Map<String, Integer> fieldSizeMapHeaderQueryParam = requestValidationConfig.getUserCreate().getQueryParam().stream()
                 .collect(Collectors.toMap(RequestComponent::getName, RequestComponent::getMaxLength));
         validationErrorQueryParam = CommonRequestValidator.validateFieldSize(actualParameters, fieldSizeMapHeaderQueryParam, formatMapDisplayNameQueryParam);
@@ -546,7 +543,7 @@ public class UserValidator {
                     HttpStatus.BAD_REQUEST.value());
         }
 
-        log.trace("Validate Field format for creating User");
+        log.trace("Validate Field format for Query param creating User");
         Map<String, String> formatMapBodyQueryParam = requestValidationConfig.getUserCreate().getQueryParam().stream()
                 .filter(a -> a.getFormat() != null)
                 .collect(Collectors.toMap(RequestComponent::getName, RequestComponent::getFormat));

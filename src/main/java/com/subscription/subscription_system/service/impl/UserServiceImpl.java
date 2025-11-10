@@ -1,15 +1,13 @@
 package com.subscription.subscription_system.service.impl;
 
-import com.subscription.subscription_system.dto.UserCreateRequestDto;
-import com.subscription.subscription_system.dto.UserDetailsDto;
-import com.subscription.subscription_system.dto.UserDetailsRequestDto;
-import com.subscription.subscription_system.dto.UserEditRequestDto;
+import com.subscription.subscription_system.dto.*;
 import com.subscription.subscription_system.entity.AdminEntity;
 import com.subscription.subscription_system.entity.AuthTokenEntity;
 import com.subscription.subscription_system.entity.SubscriberEntity;
 import com.subscription.subscription_system.entity.UserEntity;
 import com.subscription.subscription_system.enumuration.EnumSexType;
 import com.subscription.subscription_system.enumuration.EnumStatusType;
+import com.subscription.subscription_system.enumuration.EnumSubscriptionStatus;
 import com.subscription.subscription_system.enumuration.EnumUserType;
 import com.subscription.subscription_system.exception.CommonException;
 import com.subscription.subscription_system.mapper.UserMapper;
@@ -18,6 +16,7 @@ import com.subscription.subscription_system.repository.AuthTokenRepo;
 import com.subscription.subscription_system.repository.SubscriberRepo;
 import com.subscription.subscription_system.repository.UserRepo;
 import com.subscription.subscription_system.service.UserService;
+import com.subscription.subscription_system.utils.DateTimeUtils;
 import com.subscription.subscription_system.utils.JwtUtils;
 import com.subscription.subscription_system.utils.QueryUtils;
 import com.subscription.subscription_system.validation.BusinessValidation;
@@ -27,11 +26,13 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -63,13 +64,13 @@ public class UserServiceImpl implements UserService {
     MongoTemplate mongoTemplate;
 
     @Override
-    public AuthTokenEntity signUpUser(UserCreateRequestDto userCreateDto) throws CommonException {
+    public AuthTokenEntity signUpUser(SignupRequestDto userCreateDto) throws CommonException {
 
         //check duplicate email
         businessValidation.getUserByEmail(userCreateDto.getEmail());
 
         // Save User
-        UserEntity userEntity = userMapper.mapUserDtoToUserEntity(userCreateDto);
+        UserEntity userEntity = userMapper.mapSignupDtoToUserEntity(userCreateDto, null);
         userRepo.save(userEntity);
 
         // Step 4: Generate new JWT
@@ -112,20 +113,23 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<UserDetailsDto> getUsersList(String userId, String search, String filterBy, String sortBy, String sortDir, int offset, int limit) throws CommonException {
-        // 1️⃣ Validate Admin Access
+    public PaginatedResponse<UserDetailsDto> getUsersList(String userId, String search, String filterBy, String sortBy, String sortDir, int offset, int limit) throws CommonException {
+        // 1️⃣ Validate admin
         businessValidation.validateUserList(userId);
 
-        // 2️⃣ Build Mongo query dynamically
+        // 2️⃣ Build main query
         Query query = QueryUtils.buildUserQuery(search, filterBy, sortBy, sortDir);
 
-        // 3️⃣ Add pagination
+        // 3️⃣ Get total count BEFORE pagination
+        long totalCount = mongoTemplate.count(query, UserEntity.class);
+
+        // 4️⃣ Apply pagination
         query.skip(offset).limit(limit);
 
-        // 4️⃣ Fetch Users
+        // 5️⃣ Fetch paginated users
         List<UserEntity> users = mongoTemplate.find(query, UserEntity.class);
 
-        // 5️⃣ Preload Admin & Subscriber entities
+        // 6️⃣ Preload Admins & Subscribers
         List<AdminEntity> admins = mongoTemplate.findAll(AdminEntity.class);
         List<SubscriberEntity> subscribers = mongoTemplate.findAll(SubscriberEntity.class);
 
@@ -137,17 +141,21 @@ public class UserServiceImpl implements UserService {
                 .filter(s -> s.getUser() != null)
                 .collect(Collectors.toMap(s -> s.getUser().getId(), s -> s));
 
-        // 6️⃣ Map all data
-        return users.stream()
+        // 7️⃣ Map all data
+        List<UserDetailsDto> userDtos = users.stream()
                 .map(user -> {
                     AdminEntity adminEntity = adminMap.get(user.getId());
                     SubscriberEntity subscriberEntity = subscriberMap.get(user.getId());
                     return userMapper.mapUserDetails(user, adminEntity, subscriberEntity);
                 })
                 .toList();
+
+        // 8️⃣ Return data + totalCount
+        return new PaginatedResponse<>(userDtos, totalCount);
     }
 
     @Override
+
     public UserDetailsDto editUser(String requesterId, String targetUserId, UserEditRequestDto editDto) throws CommonException {
         // Validate permission
         UserEntity requester = businessValidation.validateSelfOrAdmin(requesterId, targetUserId);
@@ -276,17 +284,72 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public UserEntity createUser(UserCreateRequestDto userCreateDto, String userId) throws CommonException {
+
+        // User Of Admin Exist or not
+        UserEntity adminUser = businessValidation.getAdminByUserId(userId);
+
+        // Check admin user or not
+        businessValidation.checkAdminOrNot(adminUser);
 
         //check duplicate email
         businessValidation.getUserByEmail(userCreateDto.getEmail());
 
         // Save User
-        UserEntity userEntity = userMapper.mapUserDtoToUserEntity(userCreateDto);
+        UserEntity userEntity = userMapper.mapUserDtoToUserEntity(userCreateDto, adminUser.getFirstName() + adminUser.getLastName());
         userRepo.save(userEntity);
 
-        return null;
+        if (userCreateDto.getRole().equalsIgnoreCase(EnumUserType.ADMIN.getValue())) {
+            // Create new Admin
+            AdminEntity adminEntity = new AdminEntity();
+            adminEntity.setUser(userEntity);
+            adminEntity.setSalary(
+                    userCreateDto.getSalary() != null && !userCreateDto.getSalary().isEmpty()
+                            ? Double.parseDouble(userCreateDto.getSalary())
+                            : 0.0
+            );
+            adminEntity.setStatus(EnumStatusType.ACTIVE);
+            adminEntity.setCreatedBy(adminUser.getFirstName() + adminUser.getLastName());
+            adminEntity.setUpdatedBy(adminUser.getFirstName() + adminUser.getLastName());
+            adminEntity.setCreatedAt(LocalDateTime.now());
+            adminEntity.setUpdatedAt(LocalDateTime.now());
+
+            adminRepo.save(adminEntity);
+        } else if (userCreateDto.getRole().equalsIgnoreCase(EnumUserType.SUBSCRIBER.getValue())) {
+            SubscriberEntity subscriberEntity = new SubscriberEntity();
+            subscriberEntity.setUser(userEntity);
+            subscriberEntity.setCurrentSubStatus(EnumSubscriptionStatus.fromValue(userCreateDto.getCurrentSubStatus()).getName());
+            DateTimeFormatter storeFormatter = new DateTimeFormatterBuilder()
+                    .parseCaseInsensitive()
+                    .appendPattern("yyyy-MMM-dd")
+                    .toFormatter(Locale.ENGLISH);
+
+            if (userCreateDto.getSubStartDate() != null && !userCreateDto.getSubStartDate().isEmpty()) {
+                LocalDate startDate = DateTimeUtils.parseFlexibleDate(userCreateDto.getSubStartDate());
+                // store as yyyy-MMM-dd (upper/lowercase depends on formatter, use uppercase for month)
+                subscriberEntity.setSubStartDate(startDate.format(storeFormatter).toUpperCase(Locale.ENGLISH));
+            }
+
+            if (userCreateDto.getSubEndDate() != null && !userCreateDto.getSubEndDate().isEmpty()) {
+                LocalDate endDate = DateTimeUtils.parseFlexibleDate(userCreateDto.getSubEndDate());
+                subscriberEntity.setSubEndDate(endDate.format(storeFormatter).toUpperCase(Locale.ENGLISH));
+            }
+
+            if (userCreateDto.getJoinDate() != null && !userCreateDto.getJoinDate().isEmpty()) {
+                LocalDate joinDate = DateTimeUtils.parseFlexibleDate(userCreateDto.getJoinDate());
+                subscriberEntity.setSubEndDate(joinDate.format(storeFormatter).toUpperCase(Locale.ENGLISH));
+            }
+
+            subscriberEntity.setCreatedBy(adminUser.getFirstName() + adminUser.getLastName());
+            subscriberEntity.setUpdatedBy(adminUser.getFirstName() + adminUser.getLastName());
+            subscriberEntity.setCreatedAt(LocalDateTime.now());
+            subscriberEntity.setUpdatedAt(LocalDateTime.now());
+            subscriberEntity.setStatus(EnumStatusType.ACTIVE);
+
+            subscriberRepo.save(subscriberEntity);
+        }
+
+        return userEntity;
     }
-
-
 }

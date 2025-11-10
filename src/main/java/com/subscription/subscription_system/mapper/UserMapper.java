@@ -1,6 +1,7 @@
 package com.subscription.subscription_system.mapper;
 
 import com.subscription.subscription_system.dto.AdminCreateRequestDto;
+import com.subscription.subscription_system.dto.SignupRequestDto;
 import com.subscription.subscription_system.dto.UserCreateRequestDto;
 import com.subscription.subscription_system.dto.UserDetailsDto;
 import com.subscription.subscription_system.entity.AdminEntity;
@@ -16,7 +17,7 @@ import java.time.LocalDateTime;
 @Component
 public class UserMapper {
 
-    public UserEntity mapUserDtoToUserEntity(UserCreateRequestDto userCreateDto) {
+    public UserEntity mapSignupDtoToUserEntity(SignupRequestDto userCreateDto, String user) {
         UserEntity userEntity = new UserEntity();
         userEntity.setFirstName(userCreateDto.getFirstName());
         userEntity.setLastName(userCreateDto.getLastName());
@@ -33,9 +34,13 @@ public class UserMapper {
         );
         userEntity.setStatus(EnumStatusType.ACTIVE);
         // ✅ For signup flow (self-created)
-        userEntity.setCreatedBy("SELF");
-        userEntity.setUpdatedBy("SELF");
-        userEntity.setJoinDate(LocalDateTime.now());
+        if (user == null) {
+            userEntity.setCreatedBy("SELF");
+            userEntity.setUpdatedBy("SELF");
+        }else{
+            userEntity.setCreatedBy(user);
+            userEntity.setUpdatedBy(user);
+        }
         userEntity.setCreatedAt(LocalDateTime.now());
         userEntity.setUpdatedAt(LocalDateTime.now());
 
@@ -95,5 +100,35 @@ public class UserMapper {
         }
 
         return userDetailsDto;
+    }
+
+    public UserEntity mapUserDtoToUserEntity(UserCreateRequestDto userCreateDto, String user) {
+        UserEntity userEntity = new UserEntity();
+        userEntity.setFirstName(userCreateDto.getFirstName());
+        userEntity.setLastName(userCreateDto.getLastName());
+        userEntity.setEmail(userCreateDto.getEmail());
+        userEntity.setPassword(userCreateDto.getPassword());
+        userEntity.setAddress(userCreateDto.getAddress());
+        userEntity.setDob(userCreateDto.getDateOfBirth());
+        userEntity.setPhoneNumber(userCreateDto.getPhoneNumber());
+        userEntity.setSex(EnumSexType.valueOf(userCreateDto.getSex()));
+        userEntity.setRole(
+                userCreateDto.getRole() != null
+                        ? EnumUserType.valueOf(userCreateDto.getRole().toUpperCase())
+                        : EnumUserType.USER
+        );
+        userEntity.setStatus(EnumStatusType.ACTIVE);
+        // ✅ For signup flow (self-created)
+        if (user == null) {
+            userEntity.setCreatedBy("SELF");
+            userEntity.setUpdatedBy("SELF");
+        }else{
+            userEntity.setCreatedBy(user);
+            userEntity.setUpdatedBy(user);
+        }
+        userEntity.setCreatedAt(LocalDateTime.now());
+        userEntity.setUpdatedAt(LocalDateTime.now());
+
+        return userEntity;
     }
 }

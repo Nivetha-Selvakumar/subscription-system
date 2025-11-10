@@ -12,5 +12,5 @@ import java.util.List;
 public class UserGetResponseDto {
     private String message;
     private int code;
-    private List<UserDetailsDto> userDetails;
+    private PaginatedResponse<UserDetailsDto> userDetails;
 }

@@ -1,10 +1,13 @@
 package com.subscription.subscription_system.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
+@AllArgsConstructor
+@NoArgsConstructor
 @Data
-public class UserCreateRequestDto {
-    //User
+public class SignupRequestDto {
     private String firstName;
     private String lastName;
     private String email;
@@ -15,17 +18,5 @@ public class UserCreateRequestDto {
     private String sex;
     private String role;
     private String status;
-    private String joinDate;
-
-    // Admin
-    private String salary;
-
-    // Subscriber
-    private String currentSubStatus;
-    private String subStartDate;
-    private String subEndDate;
-
-
-
 
 }

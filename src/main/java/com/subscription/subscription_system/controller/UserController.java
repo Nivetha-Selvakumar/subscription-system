@@ -26,7 +26,7 @@ public class UserController {
     UserValidator userValidator;
 
     @PostMapping("/signup/user")
-    public ResponseEntity<UserCreateResponseDto> signUpUser(@RequestBody UserCreateRequestDto userCreateDto) throws CommonException {
+    public ResponseEntity<UserCreateResponseDto> signUpUser(@RequestBody SignupRequestDto userCreateDto) throws CommonException {
         //Basic Validation for creating user
         log.info("Basic Validation for signing up user");
         userValidator.validateUserSignup(userCreateDto);
@@ -65,7 +65,7 @@ public class UserController {
 
         // Fetch user details
         log.info("Fetching user details list");
-        List<UserDetailsDto> users = userService.getUsersList(userId, search, filterBy, sortBy, sortDir, offset, limit);
+        PaginatedResponse<UserDetailsDto> users = userService.getUsersList(userId, search, filterBy, sortBy, sortDir, offset, limit);
 
         UserGetResponseDto response = new UserGetResponseDto("Got User Data successfully", HttpStatus.OK.value(), users);
         return ResponseEntity.ok(response);
@@ -119,6 +119,4 @@ public class UserController {
         UserCreateResponseDto response = new UserCreateResponseDto("User created successfully", HttpStatus.CREATED.value(), user);
         return ResponseEntity.ok(response);
     }
-
-
 }

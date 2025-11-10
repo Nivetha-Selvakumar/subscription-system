@@ -4,6 +4,7 @@ import com.subscription.subscription_system.dto.AdminCreateRequestDto;
 import com.subscription.subscription_system.entity.AdminEntity;
 import com.subscription.subscription_system.entity.UserEntity;
 import com.subscription.subscription_system.enumuration.EnumUserType;
+import com.subscription.subscription_system.exception.CommonException;
 import com.subscription.subscription_system.mapper.AdminMapper;
 import com.subscription.subscription_system.mapper.UserMapper;
 import com.subscription.subscription_system.repository.AdminRepo;
@@ -33,7 +34,7 @@ public class AdminServiceImpl implements AdminService {
 
 
     @Override
-    public AdminEntity createAdmin(AdminCreateRequestDto adminCreateDto) {
+    public AdminEntity createAdmin(AdminCreateRequestDto adminCreateDto) throws CommonException {
         // Step 1: Check if user already exists by email
         UserEntity existingUser = businessValidation.getUserByEmailAdmin(adminCreateDto.getEmail());
 

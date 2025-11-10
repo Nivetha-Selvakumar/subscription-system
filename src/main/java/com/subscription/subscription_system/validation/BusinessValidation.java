@@ -40,10 +40,10 @@ public class BusinessValidation {
         return  userRepo.findByEmail(email);
     }
 
-    public void getAdminByUserEntity(UserEntity user) {
+    public void getAdminByUserEntity(UserEntity user) throws CommonException {
         AdminEntity existingAdmin = adminRepo.findByUser(user);
         if (existingAdmin != null) {
-            throw new RuntimeException("Admin already exists for this user");
+            throw new CommonException("Admin already exists for this user",HttpStatus.BAD_REQUEST.value());
         }
     }
 
@@ -86,4 +86,19 @@ public class BusinessValidation {
                 HttpStatus.FORBIDDEN.value());
     }
 
+
+    public UserEntity getAdminByUserId(String userId) throws CommonException {
+        Optional<UserEntity> existingAdmin = userRepo.findById(userId);
+        if (existingAdmin.isEmpty()) {
+            throw new CommonException("Admin User is not found",HttpStatus.BAD_REQUEST.value());
+        }
+        return existingAdmin.get();
+    }
+
+    public void checkAdminOrNot(UserEntity user) throws CommonException {
+        AdminEntity existingAdmin = adminRepo.findByUser(user);
+        if (existingAdmin == null) {
+            throw new CommonException("Not a Admin",HttpStatus.BAD_REQUEST.value());
+        }
+    }
 }

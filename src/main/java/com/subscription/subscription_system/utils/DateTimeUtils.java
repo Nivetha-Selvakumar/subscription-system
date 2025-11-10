@@ -1,13 +1,18 @@
 package com.subscription.subscription_system.utils;
 
+import com.subscription.subscription_system.exception.CommonException;
 import com.subscription.subscription_system.exception.ErrorMessages;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.util.Locale;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 
 @Slf4j
 public class DateTimeUtils {
@@ -32,6 +37,47 @@ public class DateTimeUtils {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
 
         return zonedDateTime.format(formatter);
+    }
+
+    private static final DateTimeFormatter FORMATTER =
+            DateTimeFormatter.ofPattern("yyyy-MMM-dd", Locale.ENGLISH);
+
+    public static LocalDateTime parseToLocalDateTime(String dateStr) {
+        if (dateStr == null || dateStr.isEmpty()) return null;
+        LocalDate localDate = LocalDate.parse(dateStr, FORMATTER);
+        return localDate.atStartOfDay();
+    }
+
+    public static LocalDate parseFlexibleDate(String input) throws CommonException {
+        if (input == null || input.trim().isEmpty()) return null;
+
+        String trimmed = input.trim();
+
+        // Formatter we want to store in: e.g. 2025-NOV-10
+        DateTimeFormatter targetFormatter = new DateTimeFormatterBuilder()
+                .parseCaseInsensitive()
+                .appendPattern("yyyy-MMM-dd")
+                .toFormatter(Locale.ENGLISH);
+
+        // ISO (yyyy-MM-dd) first (very common)
+        try {
+            return LocalDate.parse(trimmed, DateTimeFormatter.ISO_LOCAL_DATE);
+        } catch (Exception ignored) {}
+
+        // try the custom formatter (case-insensitive)
+        try {
+            return LocalDate.parse(trimmed, targetFormatter);
+        } catch (Exception ignored) {}
+
+        // try uppercase version as last resort
+        try {
+            return LocalDate.parse(trimmed.toUpperCase(Locale.ENGLISH), targetFormatter);
+        } catch (Exception ex) {
+            // give a helpful error
+            throw new CommonException("Invalid date format for value '" + input +
+                    "'. Expected formats: yyyy-MM-dd or yyyy-MMM-dd (e.g. 2025-11-10 or 2025-NOV-10).",
+                    HttpStatus.BAD_REQUEST.value());
+        }
     }
 
 }
