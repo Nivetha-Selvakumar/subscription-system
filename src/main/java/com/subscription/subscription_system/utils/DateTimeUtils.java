@@ -80,4 +80,25 @@ public class DateTimeUtils {
         }
     }
 
+    public static String convertToIsoDate(String dateStr) {
+        if (dateStr == null || dateStr.trim().isEmpty()) return null;
+
+        try {
+            // Handles "2025-NOV-10" or "2025-Nov-10"
+            DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MMM-dd", Locale.ENGLISH);
+            DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            LocalDate date = LocalDate.parse(dateStr, inputFormatter);
+            return date.format(outputFormatter); // returns "2025-11-10"
+        } catch (Exception e) {
+            // fallback: if already yyyy-MM-dd, just return it
+            try {
+                LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                return dateStr;
+            } catch (Exception ignored) {
+                return null; // invalid format
+            }
+        }
+    }
+
+
 }

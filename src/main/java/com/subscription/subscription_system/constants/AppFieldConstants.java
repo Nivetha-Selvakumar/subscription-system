@@ -24,7 +24,7 @@ public class AppFieldConstants {
 
 
     // Edit User
-    public static final String TARGET_ID = "targetId";
+    public static final String TARGET_ID = "targetUserId";
 
 
 }

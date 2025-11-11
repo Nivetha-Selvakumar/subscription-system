@@ -37,7 +37,7 @@ public class UserMapper {
         if (user == null) {
             userEntity.setCreatedBy("SELF");
             userEntity.setUpdatedBy("SELF");
-        }else{
+        } else {
             userEntity.setCreatedBy(user);
             userEntity.setUpdatedBy(user);
         }
@@ -122,7 +122,7 @@ public class UserMapper {
         if (user == null) {
             userEntity.setCreatedBy("SELF");
             userEntity.setUpdatedBy("SELF");
-        }else{
+        } else {
             userEntity.setCreatedBy(user);
             userEntity.setUpdatedBy(user);
         }

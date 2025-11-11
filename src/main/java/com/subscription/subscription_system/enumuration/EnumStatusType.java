@@ -7,7 +7,8 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 public enum EnumStatusType {
 
     ACTIVE("ACTIVE", "Active"),
-    INACTIVE("INACTIVE", "Inactive");
+    INACTIVE("INACTIVE", "Inactive"),
+    DELETE("DELETE", "Delete");
 
     private final String value;
     private final String name;

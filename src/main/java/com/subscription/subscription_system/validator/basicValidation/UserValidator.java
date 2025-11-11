@@ -148,51 +148,103 @@ public class UserValidator {
         return actualParameters;
     }
 
-    public void validateUserDetails(UserDetailsRequestDto input) throws CommonException {
-        Map<String, String> actualParameters = userDetailsParams(input);
+    public void validateUserDetails(String userId, String targetUserId) throws CommonException {
+        // Combine both header and query param
+        Map<String, String> actualParameters = userDetailsParams(userId, targetUserId);
 
-        log.trace("Validate mandatory field for user details ");
-        Map<String, String> formatMapDisplayName = requestValidationConfig.getUserDetails().getBody().stream()
+        // ------------------------- HEADER VALIDATION -------------------------
+        log.trace("Validate mandatory field for User Details Header");
+        Map<String, String> formatMapDisplayNameHeader = requestValidationConfig.getUserDetails().getHeader().stream()
                 .filter(a -> a.getDisplayName() != null)
                 .collect(Collectors.toMap(RequestComponent::getName, RequestComponent::getDisplayName));
 
-        Set<String> mandatoryHeader = requestValidationConfig.getUserDetails().getBody().stream()
-                .filter(RequestComponent::getRequired).map(RequestComponent::getName).collect(Collectors.toSet());
+        Set<String> mandatoryHeader = requestValidationConfig.getUserDetails().getHeader().stream()
+                .filter(RequestComponent::getRequired)
+                .map(RequestComponent::getName)
+                .collect(Collectors.toSet());
 
-        ValidationError validationError = CommonRequestValidator.validateMandatoryFields(actualParameters,
-                mandatoryHeader, formatMapDisplayName);
-        if (validationError != null) {
-            log.warn(ErrorMessages.MSG_VALIDATION, validationError);
-            throw ApplicationErrorCode.MISSING_MANDATORY_FIELD.getError().reqValidationError(validationError.getField(),
-                    HttpStatus.BAD_REQUEST.value());
+        ValidationError validationErrorHeader = CommonRequestValidator.validateMandatoryFields(
+                actualParameters,
+                mandatoryHeader,
+                formatMapDisplayNameHeader
+        );
+        if (validationErrorHeader != null) {
+            log.warn(ErrorMessages.MSG_VALIDATION, validationErrorHeader);
+            throw ApplicationErrorCode.MISSING_MANDATORY_FIELD.getError()
+                    .reqValidationError(validationErrorHeader.getField(), HttpStatus.BAD_REQUEST.value());
         }
 
-        log.trace("Validate Field size  for user details");
-        Map<String, Integer> fieldSizeMapHeader = requestValidationConfig.getUserDetails().getBody().stream()
+        log.trace("Validate field size for User Details Header");
+        Map<String, Integer> fieldSizeMapHeader = requestValidationConfig.getUserDetails().getHeader().stream()
                 .collect(Collectors.toMap(RequestComponent::getName, RequestComponent::getMaxLength));
-        validationError = CommonRequestValidator.validateFieldSize(actualParameters, fieldSizeMapHeader, formatMapDisplayName);
-        if (validationError != null) {
-            log.warn(ErrorMessages.MSG_VALIDATION, validationError);
-            throw ApplicationErrorCode.INVALID_FIELD_SIZE.getError().reqValidationError(validationError.getField(),
-                    HttpStatus.BAD_REQUEST.value());
+        validationErrorHeader = CommonRequestValidator.validateFieldSize(actualParameters, fieldSizeMapHeader, formatMapDisplayNameHeader);
+        if (validationErrorHeader != null) {
+            log.warn(ErrorMessages.MSG_VALIDATION, validationErrorHeader);
+            throw ApplicationErrorCode.INVALID_FIELD_SIZE.getError()
+                    .reqValidationError(validationErrorHeader.getField(), HttpStatus.BAD_REQUEST.value());
         }
 
-        log.trace("Validate Field format  for user details");
-        Map<String, String> formatMapBody = requestValidationConfig.getUserDetails().getBody().stream()
+        log.trace("Validate field format for User Details Header");
+        Map<String, String> formatMapHeader = requestValidationConfig.getUserDetails().getHeader().stream()
                 .filter(a -> a.getFormat() != null)
                 .collect(Collectors.toMap(RequestComponent::getName, RequestComponent::getFormat));
-        validationError = CommonRequestValidator.validateFieldValueFormat(actualParameters, formatMapBody, formatMapDisplayName);
-        if (validationError != null) {
-            log.warn(ErrorMessages.MSG_VALIDATION, validationError);
-            throw ApplicationErrorCode.INVALID_INPUT_FORMAT.getError().reqValidationError(validationError.getField(),
-                    HttpStatus.BAD_REQUEST.value());
+        validationErrorHeader = CommonRequestValidator.validateFieldValueFormat(actualParameters, formatMapHeader, formatMapDisplayNameHeader);
+        if (validationErrorHeader != null) {
+            log.warn(ErrorMessages.MSG_VALIDATION, validationErrorHeader);
+            throw ApplicationErrorCode.INVALID_INPUT_FORMAT.getError()
+                    .reqValidationError(validationErrorHeader.getField(), HttpStatus.BAD_REQUEST.value());
+        }
+
+        // ------------------------- QUERY PARAM VALIDATION -------------------------
+        log.trace("Validate mandatory field for User Details Query Param");
+        Map<String, String> formatMapDisplayNameQuery = requestValidationConfig.getUserDetails().getQueryParam().stream()
+                .filter(a -> a.getDisplayName() != null)
+                .collect(Collectors.toMap(RequestComponent::getName, RequestComponent::getDisplayName));
+
+        Set<String> mandatoryQueryParams = requestValidationConfig.getUserDetails().getQueryParam().stream()
+                .filter(RequestComponent::getRequired)
+                .map(RequestComponent::getName)
+                .collect(Collectors.toSet());
+
+        ValidationError validationErrorQuery = CommonRequestValidator.validateMandatoryFields(
+                actualParameters,
+                mandatoryQueryParams,
+                formatMapDisplayNameQuery
+        );
+        if (validationErrorQuery != null) {
+            log.warn(ErrorMessages.MSG_VALIDATION, validationErrorQuery);
+            throw ApplicationErrorCode.MISSING_MANDATORY_FIELD.getError()
+                    .reqValidationError(validationErrorQuery.getField(), HttpStatus.BAD_REQUEST.value());
+        }
+
+        log.trace("Validate field size for User Details Query Param");
+        Map<String, Integer> fieldSizeMapQuery = requestValidationConfig.getUserDetails().getQueryParam().stream()
+                .collect(Collectors.toMap(RequestComponent::getName, RequestComponent::getMaxLength));
+        validationErrorQuery = CommonRequestValidator.validateFieldSize(actualParameters, fieldSizeMapQuery, formatMapDisplayNameQuery);
+        if (validationErrorQuery != null) {
+            log.warn(ErrorMessages.MSG_VALIDATION, validationErrorQuery);
+            throw ApplicationErrorCode.INVALID_FIELD_SIZE.getError()
+                    .reqValidationError(validationErrorQuery.getField(), HttpStatus.BAD_REQUEST.value());
+        }
+
+        log.trace("Validate field format for User Details Query Param");
+        Map<String, String> formatMapQuery = requestValidationConfig.getUserDetails().getQueryParam().stream()
+                .filter(a -> a.getFormat() != null)
+                .collect(Collectors.toMap(RequestComponent::getName, RequestComponent::getFormat));
+        validationErrorQuery = CommonRequestValidator.validateFieldValueFormat(actualParameters, formatMapQuery, formatMapDisplayNameQuery);
+        if (validationErrorQuery != null) {
+            log.warn(ErrorMessages.MSG_VALIDATION, validationErrorQuery);
+            throw ApplicationErrorCode.INVALID_INPUT_FORMAT.getError()
+                    .reqValidationError(validationErrorQuery.getField(), HttpStatus.BAD_REQUEST.value());
         }
     }
 
-    private Map<String, String> userDetailsParams(UserDetailsRequestDto input) {
+
+
+    private Map<String, String> userDetailsParams(String userId, String targetUserId) {
         Map<String, String> actualParameters = new HashMap<>();
-        actualParameters.put(AppFieldConstants.EMAIL, input.getEmail());
-        actualParameters.put(AppFieldConstants.USERID, input.getUserId());
+        actualParameters.put(AppFieldConstants.USERID, userId);
+        actualParameters.put(AppFieldConstants.TARGET_ID, targetUserId);
 
         return actualParameters;
     }
@@ -249,7 +301,7 @@ public class UserValidator {
     public void validateEditUser(String userId, String targetUserId, UserEditRequestDto editDto) throws ValidationException {
 
         // Header
-        Map<String, String> actualParameters = userEditParams(userId,targetUserId,editDto);
+        Map<String, String> actualParameters = userEditParams(userId, targetUserId, editDto);
 
         log.trace("Validate mandatory field for Edit Users Header ");
         Map<String, String> formatMapDisplayNameHeader = requestValidationConfig.getUserEdit().getHeader().stream()
@@ -290,12 +342,12 @@ public class UserValidator {
 
 
         // PathVariable
-        log.trace("Validate mandatory field for Edit Users Path Variable ");
-        Map<String, String> formatMapDisplayNamePathVariable = requestValidationConfig.getUserEdit().getPathVariable().stream()
+        log.trace("Validate mandatory field for Edit Users Query param ");
+        Map<String, String> formatMapDisplayNamePathVariable = requestValidationConfig.getUserEdit().getQueryParam().stream()
                 .filter(a -> a.getDisplayName() != null)
                 .collect(Collectors.toMap(RequestComponent::getName, RequestComponent::getDisplayName));
 
-        Set<String> mandatoryPathVariable = requestValidationConfig.getUserEdit().getPathVariable().stream()
+        Set<String> mandatoryPathVariable = requestValidationConfig.getUserEdit().getQueryParam().stream()
                 .filter(RequestComponent::getRequired).map(RequestComponent::getName).collect(Collectors.toSet());
 
         ValidationError validationErrorPathVariable = CommonRequestValidator.validateMandatoryFields(actualParameters,
@@ -306,8 +358,8 @@ public class UserValidator {
                     HttpStatus.BAD_REQUEST.value());
         }
 
-        log.trace("Validate Field size  for Edit Users Path Variable");
-        Map<String, Integer> fieldSizeMapPathVariable = requestValidationConfig.getUserEdit().getPathVariable().stream()
+        log.trace("Validate Field size  for Edit Users Query param");
+        Map<String, Integer> fieldSizeMapPathVariable = requestValidationConfig.getUserEdit().getQueryParam().stream()
                 .collect(Collectors.toMap(RequestComponent::getName, RequestComponent::getMaxLength));
         validationErrorPathVariable = CommonRequestValidator.validateFieldSize(actualParameters, fieldSizeMapPathVariable, formatMapDisplayNamePathVariable);
         if (validationErrorPathVariable != null) {
@@ -316,8 +368,8 @@ public class UserValidator {
                     HttpStatus.BAD_REQUEST.value());
         }
 
-        log.trace("Validate Field format for Edit Users Path Variable");
-        Map<String, String> formatMapPathVariable = requestValidationConfig.getUserEdit().getPathVariable().stream()
+        log.trace("Validate Field format for Edit Users Query param");
+        Map<String, String> formatMapPathVariable = requestValidationConfig.getUserEdit().getQueryParam().stream()
                 .filter(a -> a.getFormat() != null)
                 .collect(Collectors.toMap(RequestComponent::getName, RequestComponent::getFormat));
         validationErrorPathVariable = CommonRequestValidator.validateFieldValueFormat(actualParameters, formatMapPathVariable, formatMapDisplayNamePathVariable);
@@ -390,7 +442,7 @@ public class UserValidator {
     public void validateDeleteUser(String userId, String targetUserId) throws ValidationException {
 
         // Header
-        Map<String, String> actualParameters = userDeleteParams(userId,targetUserId);
+        Map<String, String> actualParameters = userDeleteParams(userId, targetUserId);
 
         log.trace("Validate mandatory field for Delete Users Header ");
         Map<String, String> formatMapDisplayNameHeader = requestValidationConfig.getUserDelete().getHeader().stream()
@@ -431,12 +483,12 @@ public class UserValidator {
 
 
         // PathVariable
-        log.trace("Validate mandatory field for Delete Users Path Variable ");
-        Map<String, String> formatMapDisplayNamePathVariable = requestValidationConfig.getUserDelete().getPathVariable().stream()
+        log.trace("Validate mandatory field for Delete Users Query Param");
+        Map<String, String> formatMapDisplayNamePathVariable = requestValidationConfig.getUserDelete().getQueryParam().stream()
                 .filter(a -> a.getDisplayName() != null)
                 .collect(Collectors.toMap(RequestComponent::getName, RequestComponent::getDisplayName));
 
-        Set<String> mandatoryPathVariable = requestValidationConfig.getUserDelete().getPathVariable().stream()
+        Set<String> mandatoryPathVariable = requestValidationConfig.getUserDelete().getQueryParam().stream()
                 .filter(RequestComponent::getRequired).map(RequestComponent::getName).collect(Collectors.toSet());
 
         ValidationError validationErrorPathVariable = CommonRequestValidator.validateMandatoryFields(actualParameters,
@@ -447,8 +499,8 @@ public class UserValidator {
                     HttpStatus.BAD_REQUEST.value());
         }
 
-        log.trace("Validate Field size  for Edit Delete Path Variable");
-        Map<String, Integer> fieldSizeMapPathVariable = requestValidationConfig.getUserDelete().getPathVariable().stream()
+        log.trace("Validate Field size  for Edit Delete Query Param");
+        Map<String, Integer> fieldSizeMapPathVariable = requestValidationConfig.getUserDelete().getQueryParam().stream()
                 .collect(Collectors.toMap(RequestComponent::getName, RequestComponent::getMaxLength));
         validationErrorPathVariable = CommonRequestValidator.validateFieldSize(actualParameters, fieldSizeMapPathVariable, formatMapDisplayNamePathVariable);
         if (validationErrorPathVariable != null) {
@@ -457,8 +509,8 @@ public class UserValidator {
                     HttpStatus.BAD_REQUEST.value());
         }
 
-        log.trace("Validate Field format for Edit Delete Path Variable");
-        Map<String, String> formatMapPathVariable = requestValidationConfig.getUserDelete().getPathVariable().stream()
+        log.trace("Validate Field format for Edit Delete Query param");
+        Map<String, String> formatMapPathVariable = requestValidationConfig.getUserDelete().getQueryParam().stream()
                 .filter(a -> a.getFormat() != null)
                 .collect(Collectors.toMap(RequestComponent::getName, RequestComponent::getFormat));
         validationErrorPathVariable = CommonRequestValidator.validateFieldValueFormat(actualParameters, formatMapPathVariable, formatMapDisplayNamePathVariable);
@@ -478,7 +530,7 @@ public class UserValidator {
     }
 
     public void validateUserCreate(UserCreateRequestDto input, String userId) throws CommonException {
-        Map<String, String> actualParameters = getUserCreateParams(input,userId);
+        Map<String, String> actualParameters = getUserCreateParams(input, userId);
 
         log.trace("Validate mandatory field for creating User ");
         Map<String, String> formatMapDisplayName = requestValidationConfig.getUserCreate().getBody().stream()

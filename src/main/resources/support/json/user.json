@@ -176,20 +176,22 @@
     ]
   },
   "userDetails": {
-    "body": [
-      {
-        "name": "email",
-        "required": true,
-        "maxLength": 100,
-        "format": "^[\\w.%+-]+@[\\w.-]+\\.[A-Za-z]{2,6}$",
-        "displayName": "Email Address"
-      },
+    "header": [
       {
         "name": "userId",
         "required": true,
         "maxLength": 25,
         "format": null,
         "displayName": "User Id"
+      }
+    ],
+    "queryParam": [
+      {
+        "name": "targetUserId",
+        "required": true,
+        "maxLength": 25,
+        "format": null,
+        "displayName": "Target User Id"
       }
     ]
   },
@@ -214,7 +216,7 @@
         "displayName": "User Id"
       }
     ],
-    "pathVariable": [
+    "queryParam": [
       {
         "name": "targetUserId",
         "required": true,
@@ -285,7 +287,7 @@
         "displayName": "User Id"
       }
     ],
-    "pathVariable": [
+    "queryParam": [
       {
         "name": "targetUserId",
         "required": true,

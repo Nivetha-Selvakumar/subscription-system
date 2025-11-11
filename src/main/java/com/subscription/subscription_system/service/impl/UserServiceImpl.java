@@ -88,10 +88,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDetailsDto getUserDetails(UserDetailsRequestDto userDetailsInput) throws CommonException {
-        Optional<UserEntity> optionalUser = userRepo.findByEmailAndId(
-                userDetailsInput.getEmail(),
-                userDetailsInput.getUserId()
+    public UserDetailsDto getUserDetails(String userId, String targetUserId) throws CommonException {
+        // Validate permission
+        businessValidation.validateSelfOrAdmin(userId, targetUserId);
+
+        Optional<UserEntity> optionalUser = userRepo.findById(
+                targetUserId
         );
 
         // 2️⃣ If user not found
@@ -155,7 +157,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-
     public UserDetailsDto editUser(String requesterId, String targetUserId, UserEditRequestDto editDto) throws CommonException {
         // Validate permission
         UserEntity requester = businessValidation.validateSelfOrAdmin(requesterId, targetUserId);
@@ -246,7 +247,7 @@ public class UserServiceImpl implements UserService {
         log.info("Deleting user [{}] with role [{}]", targetUser.getEmail(), role);
 
         // 3️⃣ Soft delete main user (set INACTIVE)
-        targetUser.setStatus(EnumStatusType.INACTIVE);
+        targetUser.setStatus(EnumStatusType.DELETE);
         userRepo.save(targetUser);
 
         // 4️⃣ Cascade delete (soft or hard) based on role
@@ -256,7 +257,7 @@ public class UserServiceImpl implements UserService {
                 if (adminOpt.isPresent()) {
                     AdminEntity adminEntity = adminOpt.get();
                     // Option 1 (Soft Delete)
-                    adminEntity.setStatus(EnumStatusType.INACTIVE);
+                    adminEntity.setStatus(EnumStatusType.DELETE);
                     adminRepo.save(adminEntity);
                     log.info("Admin entity soft-deleted for user: {}", targetUser.getEmail());
                 }
@@ -267,7 +268,7 @@ public class UserServiceImpl implements UserService {
                 if (subscriberOpt.isPresent()) {
                     SubscriberEntity subscriberEntity = subscriberOpt.get();
                     // Option 1 (Soft Delete)
-                    subscriberEntity.setStatus(EnumStatusType.INACTIVE);
+                    subscriberEntity.setStatus(EnumStatusType.DELETE);
                     subscriberRepo.save(subscriberEntity);
 
                     log.info("Subscriber entity soft-deleted for user: {}", targetUser.getEmail());

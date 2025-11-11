@@ -12,8 +12,6 @@ import java.util.List;
 public interface UserService{
     AuthTokenEntity signUpUser(SignupRequestDto userCreateDto) throws CommonException;
 
-    UserDetailsDto getUserDetails(UserDetailsRequestDto userDetails) throws CommonException;
-
     PaginatedResponse<UserDetailsDto> getUsersList(String userId, String search, String filterBy, String sortBy, String sortDir, int offset,int limit) throws CommonException;
 
     UserDetailsDto editUser(String userId, String targetUserId, UserEditRequestDto editDto) throws CommonException;
@@ -21,4 +19,6 @@ public interface UserService{
     void deleteUser(String userId, String targetUserId) throws CommonException;
 
     UserEntity createUser(UserCreateRequestDto userCreateDto, String userId) throws CommonException;
+
+    UserDetailsDto getUserDetails(String userId, String targetUserId) throws CommonException;
 }

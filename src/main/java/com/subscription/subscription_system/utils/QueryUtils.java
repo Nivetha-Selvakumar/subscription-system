@@ -42,6 +42,10 @@ public class QueryUtils {
                     });
         }
 
+        // 🚫 3️⃣ Exclude users with status = "delete" (ignore case)
+        andCriteria.add(Criteria.where("status").not().regex("^delete$", "i"));
+
+
         // ✅ 3️⃣ Combine all valid criteria
         if (!andCriteria.isEmpty()) {
             query.addCriteria(new Criteria().andOperator(andCriteria.toArray(new Criteria[0])));
