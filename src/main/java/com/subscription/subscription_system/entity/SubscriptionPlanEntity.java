@@ -1,5 +1,6 @@
 package com.subscription.subscription_system.entity;
 
+import com.subscription.subscription_system.enumuration.EnumPlanType;
 import com.subscription.subscription_system.enumuration.EnumStatusType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -25,10 +26,13 @@ public class SubscriptionPlanEntity {
     private String planName;
 
     @Field("plan_type")
-    private String planType;
+    private EnumPlanType planType;
 
     @Field("cost")
     private Double cost;
+
+    @Field("description")
+    private String description;
 
     @Field("status")
     private EnumStatusType status;

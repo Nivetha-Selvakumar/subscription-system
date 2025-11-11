@@ -1,11 +1,14 @@
 package com.subscription.subscription_system.validation;
 
 import com.subscription.subscription_system.entity.AdminEntity;
+import com.subscription.subscription_system.entity.SubscriptionPlanEntity;
 import com.subscription.subscription_system.entity.UserEntity;
+import com.subscription.subscription_system.enumuration.EnumPlanType;
 import com.subscription.subscription_system.enumuration.EnumStatusType;
 import com.subscription.subscription_system.enumuration.EnumUserType;
 import com.subscription.subscription_system.exception.CommonException;
 import com.subscription.subscription_system.repository.AdminRepo;
+import com.subscription.subscription_system.repository.SubscriptionPlanRepo;
 import com.subscription.subscription_system.repository.UserRepo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +27,9 @@ public class BusinessValidation {
     @Autowired
     AdminRepo adminRepo;
 
+    @Autowired
+    SubscriptionPlanRepo subscriptionPlanRepo;
+
     public BusinessValidation(UserRepo userRepo, AdminRepo adminRepo) {
         this.userRepo = userRepo;
         this.adminRepo = adminRepo;
@@ -31,7 +37,7 @@ public class BusinessValidation {
 
 
     public void getUserByEmail(String email) throws CommonException {
-        UserEntity existingUser = userRepo.findByEmail(email);
+        UserEntity existingUser = userRepo.findByEmailAndStatus(email,EnumStatusType.ACTIVE);
         if (existingUser != null) {
             throw new CommonException("User with Email '" + email + "' already exists", HttpStatus.CONFLICT.value());
         }
@@ -41,8 +47,8 @@ public class BusinessValidation {
     }
 
     public void getAdminByUserEntity(UserEntity user) throws CommonException {
-        AdminEntity existingAdmin = adminRepo.findByUser(user);
-        if (existingAdmin != null) {
+        Optional<AdminEntity> existingAdmin = adminRepo.findByUserAndStatus(user,EnumStatusType.ACTIVE);
+        if (existingAdmin.isPresent()) {
             throw new CommonException("Admin already exists for this user",HttpStatus.BAD_REQUEST.value());
         }
     }
@@ -88,7 +94,7 @@ public class BusinessValidation {
 
 
     public UserEntity getAdminByUserId(String userId) throws CommonException {
-        Optional<UserEntity> existingAdmin = userRepo.findById(userId);
+        Optional<UserEntity> existingAdmin = userRepo.findByIdAndStatus(userId,EnumStatusType.ACTIVE);
         if (existingAdmin.isEmpty()) {
             throw new CommonException("Admin User is not found",HttpStatus.BAD_REQUEST.value());
         }
@@ -96,9 +102,36 @@ public class BusinessValidation {
     }
 
     public void checkAdminOrNot(UserEntity user) throws CommonException {
-        AdminEntity existingAdmin = adminRepo.findByUser(user);
-        if (existingAdmin == null) {
+        Optional<AdminEntity> existingAdmin = adminRepo.findByUserAndStatus(user,EnumStatusType.ACTIVE);
+        if (existingAdmin.isEmpty()) {
             throw new CommonException("Not a Admin",HttpStatus.BAD_REQUEST.value());
         }
+    }
+
+    public void validateSubscriptionNameExist(String planName, String planType) throws CommonException {
+        SubscriptionPlanEntity subscriptionPlan =
+                subscriptionPlanRepo.findByPlanNameAndPlanTypeAndStatus(
+                        planName,
+                        EnumPlanType.fromValue(planType.toUpperCase()),
+                        EnumStatusType.ACTIVE
+                );
+        if(subscriptionPlan != null){
+            throw new CommonException("Subscription Plan name already exist for this plan type",HttpStatus.BAD_REQUEST.value());
+        }
+    }
+
+    public void validateUserOrNot(String userId) throws CommonException {
+        Optional<UserEntity> user = userRepo.findByIdAndStatus(userId,EnumStatusType.ACTIVE);
+        if(user.isEmpty()){
+            throw new CommonException("User Not Exist",HttpStatus.BAD_REQUEST.value());
+        }
+    }
+
+    public SubscriptionPlanEntity subscriptionPlanExist(String planId) throws CommonException {
+        Optional<SubscriptionPlanEntity> subscriptionPlanEntity = subscriptionPlanRepo.findByIdAndStatus(planId, EnumStatusType.ACTIVE);
+        if(subscriptionPlanEntity.isEmpty()){
+            throw new CommonException("Plan Not Exist",HttpStatus.BAD_REQUEST.value());
+        }
+        return subscriptionPlanEntity.get();
     }
 }

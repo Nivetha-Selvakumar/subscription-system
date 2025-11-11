@@ -26,5 +26,9 @@ public class AppFieldConstants {
     // Edit User
     public static final String TARGET_ID = "targetUserId";
 
+    // Plan Create
+    public static final String PLAN_NAME = "planName";
+    public static final String PLAN_TYPE = "planType";
+    public static final String PLAN_COST = "planCost";
 
 }
