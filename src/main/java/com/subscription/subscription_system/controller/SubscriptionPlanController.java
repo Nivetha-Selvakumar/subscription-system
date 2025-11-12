@@ -75,4 +75,39 @@ public class SubscriptionPlanController {
 
     }
 
+    @PutMapping("/edit/plan")
+    public ResponseEntity<CommonResponseDto> editUser(
+            @RequestHeader("User-Id") String userId,
+            @RequestParam("targetPlanId") String targetPlanId,
+            @RequestBody PlanEditRequestDto editPlanDto) throws CommonException {
+
+        log.info("Validating edit permission for Plan: {}", targetPlanId);
+        if (userId == null || targetPlanId == null) {
+            throw new CommonException("UserId and Targeted User Id are Mandatory", HttpStatus.BAD_REQUEST.value());
+        }
+        subscriptionPlanValidator.validateEditPlan(editPlanDto);
+
+        log.info("Editing Plan details for ID: {}", editPlanDto);
+        PlanDetailsDto updatedPlan = subscriptionPlanService.editPlan(userId, targetPlanId, editPlanDto);
+
+        CommonResponseDto response = new CommonResponseDto(
+                "Plan updated successfully", HttpStatus.OK.value(), updatedPlan);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/delete/plan")
+    public ResponseEntity<CommonResponseDto> deletePlan(
+            @RequestHeader String userId,
+            @RequestParam("targetPlanId") String targetPlanId) throws CommonException {
+
+        log.info("Validating Delete permission for Plan: {}", targetPlanId);
+        if (userId == null || targetPlanId == null) {
+            throw new CommonException("UserId and Targeted User Id are Mandatory", HttpStatus.BAD_REQUEST.value());
+        }
+
+        subscriptionPlanService.deletePlan(userId, targetPlanId);
+
+
+        return null;
+    }
 }

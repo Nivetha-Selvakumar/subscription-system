@@ -3,6 +3,8 @@ package com.subscription.subscription_system.validator.basicValidation;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.subscription.subscription_system.constants.AppFieldConstants;
 import com.subscription.subscription_system.dto.PlanCreateRequestDto;
+import com.subscription.subscription_system.dto.PlanEditRequestDto;
+import com.subscription.subscription_system.dto.UserEditRequestDto;
 import com.subscription.subscription_system.exception.ApplicationErrorCode;
 import com.subscription.subscription_system.exception.ErrorMessages;
 import com.subscription.subscription_system.exception.ValidationException;
@@ -150,6 +152,64 @@ public class SubscriptionPlanValidator {
         actualParameters.put(AppFieldConstants.PLAN_NAME, planCreateRequestDto.getPlanName());
         actualParameters.put(AppFieldConstants.PLAN_COST, planCreateRequestDto.getPlanCost());
         actualParameters.put(AppFieldConstants.PLAN_TYPE, planCreateRequestDto.getPlanType());
+        return actualParameters;
+    }
+
+    public void validateEditPlan(PlanEditRequestDto editPlanDto) throws ValidationException {
+        Map<String, String> actualParameters = getPlanEditParams(editPlanDto);
+        log.trace("Validate mandatory field for Plan Edit Body");
+
+        Map<String, String> formatMapDisplayNameBody = requestValidationConfig.getPlanEdit().getBody().stream()
+                .filter(a -> a.getDisplayName() != null)
+                .collect(Collectors.toMap(RequestComponent::getName, RequestComponent::getDisplayName));
+
+        Set<String> mandatoryBody = requestValidationConfig.getPlanEdit().getBody().stream()
+                .filter(RequestComponent::getRequired)
+                .map(RequestComponent::getName)
+                .collect(Collectors.toSet());
+
+        ValidationError validationErrorBody = CommonRequestValidator.validateMandatoryFields(
+                actualParameters,
+                mandatoryBody,
+                formatMapDisplayNameBody
+        );
+
+        if (validationErrorBody != null) {
+            log.warn(ErrorMessages.MSG_VALIDATION, validationErrorBody);
+            throw ApplicationErrorCode.MISSING_MANDATORY_FIELD.getError()
+                    .reqValidationError(validationErrorBody.getField(), HttpStatus.BAD_REQUEST.value());
+        }
+
+        log.trace("Validate Field size for Plan Edit Body");
+        Map<String, Integer> fieldSizeMapBody = requestValidationConfig.getPlanEdit().getBody().stream()
+                .collect(Collectors.toMap(RequestComponent::getName, RequestComponent::getMaxLength));
+
+        validationErrorBody = CommonRequestValidator.validateFieldSize(actualParameters, fieldSizeMapBody, formatMapDisplayNameBody);
+        if (validationErrorBody != null) {
+            log.warn(ErrorMessages.MSG_VALIDATION, validationErrorBody);
+            throw ApplicationErrorCode.INVALID_FIELD_SIZE.getError()
+                    .reqValidationError(validationErrorBody.getField(), HttpStatus.BAD_REQUEST.value());
+        }
+
+        log.trace("Validate Field format for Plan Edit Body");
+        Map<String, String> formatMapBody = requestValidationConfig.getPlanEdit().getBody().stream()
+                .filter(a -> a.getFormat() != null)
+                .collect(Collectors.toMap(RequestComponent::getName, RequestComponent::getFormat));
+
+        validationErrorBody = CommonRequestValidator.validateFieldValueFormat(actualParameters, formatMapBody, formatMapDisplayNameBody);
+        if (validationErrorBody != null) {
+            log.warn(ErrorMessages.MSG_VALIDATION, validationErrorBody);
+            throw ApplicationErrorCode.INVALID_INPUT_FORMAT.getError()
+                    .reqValidationError(validationErrorBody.getField(), HttpStatus.BAD_REQUEST.value());
+        }
+    }
+
+    private Map<String, String> getPlanEditParams(PlanEditRequestDto planEditRequestDto) {
+        Map<String, String> actualParameters = new HashMap<>();
+        actualParameters.put(AppFieldConstants.PLAN_NAME, planEditRequestDto.getPlanName());
+        actualParameters.put(AppFieldConstants.PLAN_COST, planEditRequestDto.getPlanCost());
+        actualParameters.put(AppFieldConstants.PLAN_TYPE, planEditRequestDto.getPlanType());
+        actualParameters.put(AppFieldConstants.STATUS, planEditRequestDto.getStatus());
         return actualParameters;
     }
 }

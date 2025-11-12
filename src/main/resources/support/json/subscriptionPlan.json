@@ -32,6 +32,37 @@
         "displayName": "Plan Cost"
       }
     ]
+  },
+  "planEdit": {
+    "body": [
+      {
+        "name": "planName",
+        "required": true,
+        "maxLength": 50,
+        "format": "^[A-Za-z0-9 ]+$",
+        "displayName": "Plan Name"
+      },
+      {
+        "name": "planType",
+        "required": true,
+        "maxLength": 25,
+        "format": "^[A-Za-z]+$",
+        "displayName": "Plan Type"
+      },
+      {
+        "name": "planCost",
+        "required": true,
+        "maxLength": 10,
+        "format": "^[0-9]+(\\.[0-9]+)?$",
+        "displayName": "Plan Cost"
+      },
+      {
+        "name": "status",
+        "required": true,
+        "maxLength": 10,
+        "format": "^[A-Za-z]+$",
+        "displayName": "Status"
+      }
+    ]
   }
-
 }

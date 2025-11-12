@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -37,33 +38,34 @@ public class BusinessValidation {
 
 
     public void getUserByEmail(String email) throws CommonException {
-        UserEntity existingUser = userRepo.findByEmailAndStatus(email,EnumStatusType.ACTIVE);
+        UserEntity existingUser = userRepo.findByEmailAndStatus(email, EnumStatusType.ACTIVE);
         if (existingUser != null) {
             throw new CommonException("User with Email '" + email + "' already exists", HttpStatus.CONFLICT.value());
         }
     }
-    public UserEntity getUserByEmailAdmin(String email){
-        return  userRepo.findByEmail(email);
+
+    public UserEntity getUserByEmailAdmin(String email) {
+        return userRepo.findByEmail(email);
     }
 
     public void getAdminByUserEntity(UserEntity user) throws CommonException {
-        Optional<AdminEntity> existingAdmin = adminRepo.findByUserAndStatus(user,EnumStatusType.ACTIVE);
+        Optional<AdminEntity> existingAdmin = adminRepo.findByUserAndStatus(user, EnumStatusType.ACTIVE);
         if (existingAdmin.isPresent()) {
-            throw new CommonException("Admin already exists for this user",HttpStatus.BAD_REQUEST.value());
+            throw new CommonException("Admin already exists for this user", HttpStatus.BAD_REQUEST.value());
         }
     }
 
     public void validateUserList(String userId) throws CommonException {
         Optional<UserEntity> userOpt = userRepo.findByIdAndStatus(userId, EnumStatusType.ACTIVE);
         if (userOpt.isEmpty()) {
-            throw new CommonException("Invalid user ID — user not found",HttpStatus.BAD_REQUEST.value());
+            throw new CommonException("Invalid user ID — user not found", HttpStatus.BAD_REQUEST.value());
         }
         UserEntity requestingUser = userOpt.get();
         if (!EnumUserType.ADMIN.getValue().equalsIgnoreCase(requestingUser.getRole().getValue())) {
-            throw new CommonException("Access denied — only admins can view user list",HttpStatus.BAD_REQUEST.value());
+            throw new CommonException("Access denied — only admins can view user list", HttpStatus.BAD_REQUEST.value());
         }
 
-        Optional<AdminEntity> existingAdmin = adminRepo.findByUserAndStatus(requestingUser,EnumStatusType.ACTIVE);
+        Optional<AdminEntity> existingAdmin = adminRepo.findByUserAndStatus(requestingUser, EnumStatusType.ACTIVE);
         if (existingAdmin.isEmpty()) {
             throw new CommonException("Admin record not found or inactive for this user",
                     HttpStatus.BAD_REQUEST.value());
@@ -94,17 +96,17 @@ public class BusinessValidation {
 
 
     public UserEntity getAdminByUserId(String userId) throws CommonException {
-        Optional<UserEntity> existingAdmin = userRepo.findByIdAndStatus(userId,EnumStatusType.ACTIVE);
+        Optional<UserEntity> existingAdmin = userRepo.findByIdAndStatus(userId, EnumStatusType.ACTIVE);
         if (existingAdmin.isEmpty()) {
-            throw new CommonException("Admin User is not found",HttpStatus.BAD_REQUEST.value());
+            throw new CommonException("Admin User is not found", HttpStatus.BAD_REQUEST.value());
         }
         return existingAdmin.get();
     }
 
     public void checkAdminOrNot(UserEntity user) throws CommonException {
-        Optional<AdminEntity> existingAdmin = adminRepo.findByUserAndStatus(user,EnumStatusType.ACTIVE);
+        Optional<AdminEntity> existingAdmin = adminRepo.findByUserAndStatus(user, EnumStatusType.ACTIVE);
         if (existingAdmin.isEmpty()) {
-            throw new CommonException("Not a Admin",HttpStatus.BAD_REQUEST.value());
+            throw new CommonException("Not a Admin", HttpStatus.BAD_REQUEST.value());
         }
     }
 
@@ -115,23 +117,48 @@ public class BusinessValidation {
                         EnumPlanType.fromValue(planType.toUpperCase()),
                         EnumStatusType.ACTIVE
                 );
-        if(subscriptionPlan != null){
-            throw new CommonException("Subscription Plan name already exist for this plan type",HttpStatus.BAD_REQUEST.value());
+        if (subscriptionPlan != null) {
+            throw new CommonException("Subscription Plan name already exist for this plan type", HttpStatus.BAD_REQUEST.value());
         }
     }
 
     public void validateUserOrNot(String userId) throws CommonException {
-        Optional<UserEntity> user = userRepo.findByIdAndStatus(userId,EnumStatusType.ACTIVE);
-        if(user.isEmpty()){
-            throw new CommonException("User Not Exist",HttpStatus.BAD_REQUEST.value());
+        Optional<UserEntity> user = userRepo.findByIdAndStatus(userId, EnumStatusType.ACTIVE);
+        if (user.isEmpty()) {
+            throw new CommonException("User Not Exist", HttpStatus.BAD_REQUEST.value());
         }
     }
 
     public SubscriptionPlanEntity subscriptionPlanExist(String planId) throws CommonException {
         Optional<SubscriptionPlanEntity> subscriptionPlanEntity = subscriptionPlanRepo.findByIdAndStatus(planId, EnumStatusType.ACTIVE);
-        if(subscriptionPlanEntity.isEmpty()){
-            throw new CommonException("Plan Not Exist",HttpStatus.BAD_REQUEST.value());
+        if (subscriptionPlanEntity.isEmpty()) {
+            throw new CommonException("Plan Not Exist", HttpStatus.BAD_REQUEST.value());
         }
         return subscriptionPlanEntity.get();
+    }
+
+    public void validatePlanNameEdit(SubscriptionPlanEntity subscriptionPlanEntity) throws CommonException {
+        String planName = subscriptionPlanEntity.getPlanName();
+        EnumPlanType planType = subscriptionPlanEntity.getPlanType();
+        String planId = subscriptionPlanEntity.getId();
+
+        // Find any other plan with same name & type but different id
+        Optional<SubscriptionPlanEntity> existingPlan = subscriptionPlanRepo
+                .findByPlanNameAndPlanTypeAndStatusIn(
+                        planName,
+                        planType,
+                        List.of(EnumStatusType.ACTIVE, EnumStatusType.INACTIVE)
+                )
+                .filter(plan -> !plan.getId().equals(planId)); // exclude current plan
+
+        if (existingPlan.isPresent()) {
+            log.error("❌ Duplicate plan name '{}' found for planType '{}' (Existing PlanId: {})", planName, planType, existingPlan.get().getId());
+            throw new CommonException(
+                    "Plan name already exists for this plan type!",
+                    HttpStatus.BAD_REQUEST.value()
+            );
+        }
+
+        log.debug("✅ Plan name '{}' is unique for plan type '{}'.", planName, planType);
     }
 }

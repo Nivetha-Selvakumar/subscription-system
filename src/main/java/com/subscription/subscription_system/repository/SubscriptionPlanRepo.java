@@ -6,6 +6,8 @@ import com.subscription.subscription_system.enumuration.EnumStatusType;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 @Repository
@@ -15,4 +17,7 @@ public interface SubscriptionPlanRepo extends MongoRepository<SubscriptionPlanEn
 
     Optional<SubscriptionPlanEntity> findByIdAndStatus(String planId, EnumStatusType enumStatusType);
 
+    Optional<SubscriptionPlanEntity> findByPlanNameAndPlanType(String planName, EnumPlanType planType);
+
+    Optional<SubscriptionPlanEntity> findByPlanNameAndPlanTypeAndStatusIn(String planName, EnumPlanType planType, List<EnumStatusType> active);
 }

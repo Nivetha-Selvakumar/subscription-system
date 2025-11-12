@@ -11,13 +11,13 @@ import java.time.LocalDateTime;
 @Component
 public class SubscriptionPlanMapper {
 
-    public SubscriptionPlanEntity mapToSubscriberPlanEntity(String planName, String planType, String planCost,String desc, String adminName) {
+    public SubscriptionPlanEntity mapToSubscriberPlanEntity(String planName, String planType, String planCost,String desc,EnumStatusType statusType, String adminName) {
         SubscriptionPlanEntity subscriptionPlanEntity = new SubscriptionPlanEntity();
         subscriptionPlanEntity.setPlanName(planName);
         subscriptionPlanEntity.setPlanType(EnumPlanType.fromValue(planType.toUpperCase()));
         subscriptionPlanEntity.setCost(Double.valueOf(planCost));
         subscriptionPlanEntity.setDescription(desc);
-        subscriptionPlanEntity.setStatus(EnumStatusType.ACTIVE);
+        subscriptionPlanEntity.setStatus(statusType);
         subscriptionPlanEntity.setCreatedBy(adminName);
         subscriptionPlanEntity.setUpdatedBy(adminName);
         subscriptionPlanEntity.setCreatedAt(LocalDateTime.now());
@@ -40,6 +40,19 @@ public class SubscriptionPlanMapper {
         planDetailsDto.setUpdatedAt(subscriptionPlanEntity.getUpdatedAt().toString());
 
         return planDetailsDto;
+    }
+
+    public void mapEditToSubscriberPlanEntity(String planName, String planType, String planCost,
+                                              String desc, EnumStatusType statusType,
+                                              String adminName, SubscriptionPlanEntity subscriptionPlanEntity) {
+        subscriptionPlanEntity.setPlanName(planName);
+        subscriptionPlanEntity.setPlanType(EnumPlanType.fromValue(planType.toUpperCase()));
+        subscriptionPlanEntity.setCost(Double.valueOf(planCost));
+        subscriptionPlanEntity.setDescription(desc);
+        subscriptionPlanEntity.setStatus(statusType);
+        subscriptionPlanEntity.setUpdatedBy(adminName);
+        subscriptionPlanEntity.setUpdatedAt(LocalDateTime.now());
+
     }
 }
 

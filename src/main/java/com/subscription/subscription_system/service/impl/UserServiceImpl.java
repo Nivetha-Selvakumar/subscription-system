@@ -182,6 +182,9 @@ public class UserServiceImpl implements UserService {
         if (editDto.getSex() != null) targetUser.setSex(EnumSexType.fromValue(editDto.getSex()));
         if (editDto.getStatus() != null) targetUser.setStatus(EnumStatusType.fromValue(editDto.getStatus()));
 
+        targetUser.setUpdatedAt(LocalDateTime.now());
+        targetUser.setUpdatedBy(requester.getFirstName()+ " " + requester.getLastName());
+
         userRepo.save(targetUser); // save user part first
 
         // 4️⃣ Role-based additional updates
@@ -204,6 +207,8 @@ public class UserServiceImpl implements UserService {
                     adminEntity.setUser(targetUser);
                 }
                 adminEntity.setSalary(editDto.getSalary());
+                adminEntity.setUpdatedAt(LocalDateTime.now());
+                adminEntity.setUpdatedBy(requester.getFirstName() + " " + requester.getLastName());
                 adminRepo.save(adminEntity);
                 break;
 
@@ -217,6 +222,8 @@ public class UserServiceImpl implements UserService {
                 subscriberEntity.setSubStartDate(editDto.getSubStartDate());
                 subscriberEntity.setSubEndDate(editDto.getSubEndDate());
                 subscriberEntity.setJoinDate(editDto.getJoinDate());
+                subscriberEntity.setUpdatedAt(LocalDateTime.now());
+                subscriberEntity.setUpdatedBy(requester.getFirstName() + " " + requester.getLastName());
                 subscriberRepo.save(subscriberEntity);
                 break;
 
@@ -248,6 +255,8 @@ public class UserServiceImpl implements UserService {
 
         // 3️⃣ Soft delete main user (set INACTIVE)
         targetUser.setStatus(EnumStatusType.DELETE);
+        targetUser.setUpdatedAt(LocalDateTime.now());
+        targetUser.setUpdatedBy(requester.getFirstName() + " " + requester.getLastName());
         userRepo.save(targetUser);
 
         // 4️⃣ Cascade delete (soft or hard) based on role
@@ -258,6 +267,8 @@ public class UserServiceImpl implements UserService {
                     AdminEntity adminEntity = adminOpt.get();
                     // Option 1 (Soft Delete)
                     adminEntity.setStatus(EnumStatusType.DELETE);
+                    adminEntity.setUpdatedAt(LocalDateTime.now());
+                    adminEntity.setUpdatedBy(requester.getFirstName() + " " + requester.getLastName());
                     adminRepo.save(adminEntity);
                     log.info("Admin entity soft-deleted for user: {}", targetUser.getEmail());
                 }
@@ -269,6 +280,8 @@ public class UserServiceImpl implements UserService {
                     SubscriberEntity subscriberEntity = subscriberOpt.get();
                     // Option 1 (Soft Delete)
                     subscriberEntity.setStatus(EnumStatusType.DELETE);
+                    subscriberEntity.setUpdatedAt(LocalDateTime.now());
+                    subscriberEntity.setUpdatedBy(requester.getFirstName() + " " + requester.getLastName());
                     subscriberRepo.save(subscriberEntity);
 
                     log.info("Subscriber entity soft-deleted for user: {}", targetUser.getEmail());

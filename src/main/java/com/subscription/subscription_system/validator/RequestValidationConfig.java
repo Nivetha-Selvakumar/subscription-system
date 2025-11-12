@@ -16,5 +16,7 @@ public class RequestValidationConfig {
     RequestValidationItem userEdit;
     RequestValidationItem userDelete;
     RequestValidationItem planCreate;
+    RequestValidationItem planEdit;
+
 
 }
