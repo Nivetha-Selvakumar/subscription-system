@@ -14,11 +14,7 @@ public interface UserRepo extends MongoRepository<UserEntity, String> {
     // Find by email
     UserEntity findByEmail(String email);
 
-
-    // Or list by role (Admin / Subscriber)
-    List<UserEntity> findAllByRole(String role);
-
-    Optional<UserEntity> findByEmailAndId(String email, String userId);
-
     Optional<UserEntity> findByIdAndStatus(String userId, EnumStatusType enumStatusType);
+
+    UserEntity findByEmailAndStatus(String email, EnumStatusType enumStatusType);
 }

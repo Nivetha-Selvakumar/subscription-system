@@ -63,7 +63,7 @@ public class UserController {
                                                        @RequestParam(required = false, defaultValue = "asc") String sortDir,
                                                        @RequestParam(required = false, defaultValue = "0") int offset,
                                                        @RequestParam(required = false, defaultValue = "10") int limit) throws CommonException {
-        log.info("Basic validation for getting user details");
+        log.info("Basic validation for getting user List");
         userValidator.validateUserList(userId);
 
         // Fetch user details

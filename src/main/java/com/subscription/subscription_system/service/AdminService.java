@@ -8,6 +8,5 @@ import org.springframework.stereotype.Component;
 @Component
 public interface AdminService {
 
-
     AdminEntity createAdmin(AdminCreateRequestDto adminCreateDto) throws CommonException;
 }

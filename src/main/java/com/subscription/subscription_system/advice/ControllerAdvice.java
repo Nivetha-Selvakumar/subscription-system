@@ -5,11 +5,13 @@ import com.subscription.subscription_system.exception.CommonException;
 import com.subscription.subscription_system.exception.ValidationException;
 import com.subscription.subscription_system.validator.ValidationError;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,11 +36,23 @@ public class ControllerAdvice {
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(ValidationException.class)
-    public Map<String,String> validationError(ValidationError error){
+    public Map<String,String> validationError(ValidationException error){
         Map<String,String> errObj = new HashMap<>();
         errObj.put(AppConstant.ERROR,error.getMessage());
         return errObj;
     }
+
+    // Handle any other uncaught exception gracefully
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("timestamp", LocalDateTime.now());
+        errorResponse.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
+        errorResponse.put("error", "Internal Server Error");
+        errorResponse.put("message", ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
 //
 //    @ResponseStatus(HttpStatus.BAD_REQUEST)
 //    @ExceptionHandler(MisMatchException.class)

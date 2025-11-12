@@ -6,8 +6,6 @@ import com.subscription.subscription_system.entity.UserEntity;
 import com.subscription.subscription_system.exception.CommonException;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-
 @Component
 public interface UserService{
     AuthTokenEntity signUpUser(SignupRequestDto userCreateDto) throws CommonException;
