@@ -1,6 +1,7 @@
 package com.subscription.subscription_system.validation;
 
 import com.subscription.subscription_system.entity.AdminEntity;
+import com.subscription.subscription_system.entity.FeedbackEntity;
 import com.subscription.subscription_system.entity.SubscriptionPlanEntity;
 import com.subscription.subscription_system.entity.UserEntity;
 import com.subscription.subscription_system.enumuration.EnumPlanType;
@@ -8,6 +9,7 @@ import com.subscription.subscription_system.enumuration.EnumStatusType;
 import com.subscription.subscription_system.enumuration.EnumUserType;
 import com.subscription.subscription_system.exception.CommonException;
 import com.subscription.subscription_system.repository.AdminRepo;
+import com.subscription.subscription_system.repository.FeedbackRepo;
 import com.subscription.subscription_system.repository.SubscriptionPlanRepo;
 import com.subscription.subscription_system.repository.UserRepo;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +32,9 @@ public class BusinessValidation {
 
     @Autowired
     SubscriptionPlanRepo subscriptionPlanRepo;
+
+    @Autowired
+    FeedbackRepo feedbackRepo;
 
     public BusinessValidation(UserRepo userRepo, AdminRepo adminRepo) {
         this.userRepo = userRepo;
@@ -122,11 +127,12 @@ public class BusinessValidation {
         }
     }
 
-    public void validateUserOrNot(String userId) throws CommonException {
+    public UserEntity validateUserOrNot(String userId) throws CommonException {
         Optional<UserEntity> user = userRepo.findByIdAndStatus(userId, EnumStatusType.ACTIVE);
         if (user.isEmpty()) {
             throw new CommonException("User Not Exist", HttpStatus.BAD_REQUEST.value());
         }
+        return user.get();
     }
 
     public SubscriptionPlanEntity subscriptionPlanExist(String planId) throws CommonException {
@@ -161,4 +167,10 @@ public class BusinessValidation {
 
         log.debug("✅ Plan name '{}' is unique for plan type '{}'.", planName, planType);
     }
+
+    public FeedbackEntity feedbackExist(String feedbackId) throws CommonException {
+        return feedbackRepo.findByIdAndStatusNot(feedbackId, EnumStatusType.DELETE)
+                .orElseThrow(() -> new CommonException("Feedback not found or deleted",HttpStatus.NO_CONTENT.value()));
+    }
+
 }

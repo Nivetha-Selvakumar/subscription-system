@@ -1,5 +1,7 @@
 package com.subscription.subscription_system.utils;
 
+import com.subscription.subscription_system.enumuration.EnumStatusType;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -9,6 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
+@Slf4j
 public class QueryUtils {
 
     private QueryUtils() {
@@ -144,6 +147,50 @@ public class QueryUtils {
                 : Sort.Direction.ASC;
 
         query.with(Sort.by(direction, sortBy != null ? sortBy : "plan_name"));
+
+        return query;
+    }
+
+
+    public static Query buildFeedbackQuery(String search, String filterBy, String sortBy, String sortDir) {
+        Query query = new Query();
+
+        Criteria criteria = new Criteria();
+
+        // 🧩 1️⃣ Search by comments or rating
+        if (search != null && !search.trim().isEmpty()) {
+            criteria = new Criteria().orOperator(
+                    Criteria.where("comments").regex(search, "i"),  // Case-insensitive search
+                    Criteria.where("ratings").regex(search, "i")
+            );
+        }
+
+        // 🧩 2️⃣ Filter by status (Active / Inactive)
+        if (filterBy != null && !filterBy.trim().isEmpty()) {
+            try {
+                EnumStatusType statusType = EnumStatusType.valueOf(filterBy.toUpperCase());
+                criteria = criteria.and("status").is(statusType);
+            } catch (IllegalArgumentException e) {
+                log.warn("⚠️ Invalid filterBy value '{}', ignoring...", filterBy);
+            }
+        }
+
+        // 🧩 3️⃣ Exclude Deleted records by default
+        criteria = criteria.and("status").ne(EnumStatusType.DELETE);
+
+        query.addCriteria(criteria);
+
+        // 🧩 4️⃣ Sort
+        Sort.Direction direction = Sort.Direction.DESC;
+        if (sortDir != null && sortDir.equalsIgnoreCase("asc")) {
+            direction = Sort.Direction.ASC;
+        }
+
+        if (sortBy != null && !sortBy.isEmpty()) {
+            query.with(Sort.by(direction, sortBy));
+        } else {
+            query.with(Sort.by(Sort.Direction.DESC, "createdAt"));
+        }
 
         return query;
     }

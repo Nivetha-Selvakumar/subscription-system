@@ -47,7 +47,7 @@ public class SubscriptionPlanController {
         }
 
         PlanDetailsDto planDetailsDto = subscriptionPlanService.getPlanDetails(userId, planId);
-        CommonResponseDto response = new CommonResponseDto("Plan created successfully", HttpStatus.CREATED.value(), planDetailsDto);
+        CommonResponseDto response = new CommonResponseDto("Plan details fetched successfully", HttpStatus.OK.value(), planDetailsDto);
 
         return ResponseEntity.ok(response);
     }
@@ -69,21 +69,21 @@ public class SubscriptionPlanController {
         log.info("Fetching Plan details list");
         CommonPaginatedResponse<PlanDetailsDto> planList = subscriptionPlanService.getPlanList(userId, search, filterBy, sortBy, sortDir, offset, limit);
 
-        CommonResponseDto response = new CommonResponseDto("Plan created successfully", HttpStatus.CREATED.value(), planList);
+        CommonResponseDto response = new CommonResponseDto("Plan List fetched successfully", HttpStatus.OK.value(), planList);
 
         return ResponseEntity.ok(response);
 
     }
 
     @PutMapping("/edit/plan")
-    public ResponseEntity<CommonResponseDto> editUser(
+    public ResponseEntity<CommonResponseDto> editPlan(
             @RequestHeader("User-Id") String userId,
             @RequestParam("targetPlanId") String targetPlanId,
             @RequestBody PlanEditRequestDto editPlanDto) throws CommonException {
 
         log.info("Validating edit permission for Plan: {}", targetPlanId);
         if (userId == null || targetPlanId == null) {
-            throw new CommonException("UserId and Targeted User Id are Mandatory", HttpStatus.BAD_REQUEST.value());
+            throw new CommonException("UserId and Targeted Plan Id are Mandatory", HttpStatus.BAD_REQUEST.value());
         }
         subscriptionPlanValidator.validateEditPlan(editPlanDto);
 
@@ -102,12 +102,14 @@ public class SubscriptionPlanController {
 
         log.info("Validating Delete permission for Plan: {}", targetPlanId);
         if (userId == null || targetPlanId == null) {
-            throw new CommonException("UserId and Targeted User Id are Mandatory", HttpStatus.BAD_REQUEST.value());
+            throw new CommonException("UserId and Targeted Plan Id are Mandatory", HttpStatus.BAD_REQUEST.value());
         }
 
         subscriptionPlanService.deletePlan(userId, targetPlanId);
 
+        CommonResponseDto response = new CommonResponseDto(
+                "Plan deleted successfully", HttpStatus.OK.value(), null);
 
-        return null;
+        return ResponseEntity.ok(response);
     }
 }

@@ -31,4 +31,9 @@ public class AppFieldConstants {
     public static final String PLAN_TYPE = "planType";
     public static final String PLAN_COST = "planCost";
 
+    // Feedback
+    public static final String RATINGS = "ratings";
+    public static final String COMMENTS = "comments";
+
+
 }
