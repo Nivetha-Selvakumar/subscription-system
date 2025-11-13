@@ -27,7 +27,7 @@ public class FeedbackMapper
     public FeedbackDetailsDto mapToFeedbackDetailsDto(FeedbackEntity entity) {
         FeedbackDetailsDto dto = new FeedbackDetailsDto();
         dto.setId(entity.getId());
-        dto.setUser(entity.getUser().getId());
+        dto.setUser(entity.getUser());
         dto.setRatings(String.valueOf(entity.getRatings()));
         dto.setComments(entity.getComments());
         dto.setStatus(entity.getStatus().name());

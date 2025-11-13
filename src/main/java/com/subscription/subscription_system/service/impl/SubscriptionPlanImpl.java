@@ -132,7 +132,7 @@ public class SubscriptionPlanImpl implements SubscriptionPlanService {
         log.info("Edit Plan api Mapping to entity");
         subscriptionPlanMapper.mapEditToSubscriberPlanEntity(editPlanDto.getPlanName(), editPlanDto.getPlanType(),
                 editPlanDto.getPlanCost(), editPlanDto.getDescription(),
-                EnumStatusType.fromValue(editPlanDto.getStatus()), adminUserId, subscriptionPlanEntity);
+                EnumStatusType.fromValue(editPlanDto.getStatus()), adminUser.getFirstName()+" "+ adminUser.getLastName(), subscriptionPlanEntity);
 
         log.info("Edit Plan api saving to repo");
         subscriptionPlanRepo.save(subscriptionPlanEntity);

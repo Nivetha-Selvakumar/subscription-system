@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class FeedbackDetailsDto {
     private String id;
-    private String user;
+    private Object user;
     private String ratings;
     private String comments;
     private String status;
