@@ -66,7 +66,7 @@ public class FeedbackController {
     public ResponseEntity<CommonResponseDto> getFeedbackList(@RequestHeader("User-Id") String userId,
                                                              @RequestParam(required = false) String search,
                                                              @RequestParam(required = false) String filterBy,  // format: key:value,key:value
-                                                             @RequestParam(required = false, defaultValue = "firstName") String sortBy,
+                                                             @RequestParam(required = false, defaultValue = "createdAt") String sortBy,
                                                              @RequestParam(required = false, defaultValue = "asc") String sortDir,
                                                              @RequestParam(required = false, defaultValue = "0") int offset,
                                                              @RequestParam(required = false, defaultValue = "10") int limit) throws CommonException {
