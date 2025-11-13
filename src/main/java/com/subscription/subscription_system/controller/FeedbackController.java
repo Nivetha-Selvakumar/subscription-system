@@ -46,7 +46,7 @@ public class FeedbackController {
     @GetMapping("/get/feedbackDetails")
     public ResponseEntity<CommonResponseDto> getFeedbackDetails(
             @RequestHeader("User-Id") String userId,
-            @RequestParam("feedbackId") String feedbackId) throws CommonException {
+            @RequestParam("targetFeedbackId") String feedbackId) throws CommonException {
 
         log.info("Basic Validation for Getting Feedback plan Details");
         if (userId == null || feedbackId == null) {

@@ -6,6 +6,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -153,40 +156,81 @@ public class QueryUtils {
 
 
     public static Query buildFeedbackQuery(String search, String filterBy, String sortBy, String sortDir) {
-        Query query = new Query();
 
+        Query query = new Query();
         Criteria criteria = new Criteria();
 
-        // 🧩 1️⃣ Search by comments or rating
+        List<Criteria> criteriaList = new ArrayList<>();
+
+        // 1️⃣ Search by comments or ratings
         if (search != null && !search.trim().isEmpty()) {
-            criteria = new Criteria().orOperator(
-                    Criteria.where("comments").regex(search, "i"),  // Case-insensitive search
+            criteriaList.add(new Criteria().orOperator(
+                    Criteria.where("comments").regex(search, "i"),
                     Criteria.where("ratings").regex(search, "i")
-            );
+            ));
         }
 
-        // 🧩 2️⃣ Filter by status (Active / Inactive)
+        // 2️⃣ Apply filters
         if (filterBy != null && !filterBy.trim().isEmpty()) {
-            try {
-                EnumStatusType statusType = EnumStatusType.valueOf(filterBy.toUpperCase());
-                criteria = criteria.and("status").is(statusType);
-            } catch (IllegalArgumentException e) {
-                log.warn("⚠️ Invalid filterBy value '{}', ignoring...", filterBy);
+
+            String[] filters = filterBy.split(",");
+
+            for (String filter : filters) {
+
+                // split into exactly 2 parts → key & full value
+                String[] parts = filter.split(":", 2);
+                if (parts.length != 2) continue;
+
+                String key = parts[0];
+                String value = parts[1];
+
+                switch (key) {
+                    case "ratings":
+                        criteriaList.add(Criteria.where("ratings")
+                                .is(Integer.parseInt(value)));
+                        break;
+
+                    case "status":
+                        try {
+                            EnumStatusType statusType = EnumStatusType.valueOf(value.toUpperCase());
+                            criteriaList.add(Criteria.where("status").is(statusType));
+                        } catch (Exception e) {
+                            log.warn("Invalid status filter {}", value);
+                        }
+                        break;
+
+                    case "startDate":
+                        LocalDateTime start = LocalDate.parse(value.substring(0, 10))
+                                .atStartOfDay();
+                        criteriaList.add(Criteria.where("createdAt").gte(start));
+                        break;
+
+                    case "endDate":
+                        LocalDateTime end = LocalDate.parse(value.substring(0, 10))
+                                .atTime(LocalTime.MAX);
+                        criteriaList.add(Criteria.where("createdAt").lte(end));
+                        break;
+                }
             }
+
         }
 
-        // 🧩 3️⃣ Exclude Deleted records by default
-        criteria = criteria.and("status").ne(EnumStatusType.DELETE);
+        // 3️⃣ Exclude Deleted
+        criteriaList.add(Criteria.where("status").ne(EnumStatusType.DELETE));
+
+        // Combine all criteria
+        if (!criteriaList.isEmpty()) {
+            criteria = new Criteria().andOperator(criteriaList.toArray(new Criteria[0]));
+        }
 
         query.addCriteria(criteria);
 
-        // 🧩 4️⃣ Sort
-        Sort.Direction direction = Sort.Direction.DESC;
-        if (sortDir != null && sortDir.equalsIgnoreCase("asc")) {
-            direction = Sort.Direction.ASC;
-        }
+        // 4️⃣ Sorting
+        Sort.Direction direction = sortDir != null && sortDir.equalsIgnoreCase("asc")
+                ? Sort.Direction.ASC
+                : Sort.Direction.DESC;
 
-        if (sortBy != null && !sortBy.isEmpty()) {
+        if (sortBy != null && !sortBy.isBlank()) {
             query.with(Sort.by(direction, sortBy));
         } else {
             query.with(Sort.by(Sort.Direction.DESC, "createdAt"));
@@ -194,4 +238,6 @@ public class QueryUtils {
 
         return query;
     }
+
+
 }
