@@ -33,10 +33,10 @@ public class SupportResponseEntity {
     private String responseText;
 
     @Field("responded_at")
-    private String respondedAt;
+    private LocalDateTime respondedAt;
 
     @Field("responder")
-    private String responder;
+    private UserEntity responder;
 
     @Field("status")
     private EnumStatusType status;

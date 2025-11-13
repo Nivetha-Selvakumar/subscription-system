@@ -1,5 +1,7 @@
 package com.subscription.subscription_system.entity;
 
+import com.subscription.subscription_system.enumuration.EnumStatusType;
+import com.subscription.subscription_system.enumuration.EnumTicketStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -29,13 +31,16 @@ public class SupportTicketEntity {
     private String issueDescription;
 
     @Field("status")
-    private String status;
+    private EnumStatusType status;
+
+    @Field("ticket_status")
+    private EnumTicketStatus ticketStatus;
 
     @Field("created_at")
-    private String createdAt;
+    private LocalDateTime createdAt;
 
     @Field("updated_at")
-    private String updateAt;
+    private LocalDateTime updateAt;
 
     @Field("created_by")
     private String createdBy;

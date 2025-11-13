@@ -1,0 +1,31 @@
+{
+  "supportResponseCreate": {
+    "header": [
+      {
+        "name": "userId",
+        "required": true,
+        "maxLength": 50,
+        "format": "^[A-Za-z0-9_-]+$",
+        "displayName": "User ID"
+      }
+    ],
+    "query": [
+      {
+        "name": "targetTicketId",
+        "required": true,
+        "maxLength": 50,
+        "format": "^[A-Za-z0-9_-]+$",
+        "displayName": "Ticket ID"
+      }
+    ],
+    "body": [
+      {
+        "name": "responseText",
+        "required": true,
+        "maxLength": 500,
+        "format": null,
+        "displayName": "Response Text"
+      }
+    ]
+  }
+}
