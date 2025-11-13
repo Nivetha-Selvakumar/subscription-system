@@ -17,4 +17,5 @@ public class FeedbackDetailsDto {
     private String createdBy;
     private String updatedAt;
     private String updatedBy;
+    private String isAdmin;
 }
