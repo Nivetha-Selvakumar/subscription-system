@@ -40,7 +40,7 @@ public class SupportTicketEntity {
     private LocalDateTime createdAt;
 
     @Field("updated_at")
-    private LocalDateTime updateAt;
+    private LocalDateTime updatedAt;
 
     @Field("created_by")
     private String createdBy;

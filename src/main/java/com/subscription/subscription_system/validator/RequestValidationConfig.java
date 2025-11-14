@@ -20,6 +20,8 @@ public class RequestValidationConfig {
     RequestValidationItem feedbackCreate;
     RequestValidationItem feedbackEdit;
     RequestValidationItem supportResponseCreate;
+    RequestValidationItem supportTicketRequestEdit;
+    RequestValidationItem supportResponseEdit;
 
 
 }
