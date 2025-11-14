@@ -7,9 +7,12 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class SupportTicketRequestEditDto {
-    private String subject;
-    private String issueDescription;
-    private String status;
-    private String ticketStatus;
+public class SubscriptionCreateDto {
+
+    private String currentSubStatus;
+
+
+
+
+
 }

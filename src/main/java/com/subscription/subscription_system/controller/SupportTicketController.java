@@ -32,6 +32,7 @@ public class SupportTicketController {
         if (userId == null) {
             throw new CommonException("UserId is invalid", HttpStatus.BAD_REQUEST.value());
         }
+        supportTicketValidator.validateSupportTicketRequestCreate(userId,supportTicketRequestDto);
         SupportTicketEntity supportTicketEntity = supportTicketService.createSupportTicket(userId, supportTicketRequestDto);
         CommonResponseDto response = new CommonResponseDto("Support Ticket Created Successfully", HttpStatus.CREATED.value(), supportTicketEntity);
         return ResponseEntity.ok(response);

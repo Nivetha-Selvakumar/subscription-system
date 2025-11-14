@@ -27,6 +27,9 @@ public class SupportTicketEntity {
     @Field("user_id")
     private UserEntity user;
 
+    @Field("subject")
+    private String subject;
+
     @Field("issue_desc")
     private String issueDescription;
 

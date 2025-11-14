@@ -64,7 +64,7 @@ public class SupportTicketImpl implements SupportTicketService {
             throw new CommonException("Admin Cannot Raise a Ticket", HttpStatus.BAD_REQUEST.value());
         }
 
-        SupportTicketEntity supportTicketEntity = supportTicketMapper.mapToSupportTicket(user, supportTicketRequestDto.getIssueDescription());
+        SupportTicketEntity supportTicketEntity = supportTicketMapper.mapToSupportTicket(user, supportTicketRequestDto.getIssueDescription(),supportTicketRequestDto.getSubject());
         supportTicketRepo.save(supportTicketEntity);
         return supportTicketEntity;
     }

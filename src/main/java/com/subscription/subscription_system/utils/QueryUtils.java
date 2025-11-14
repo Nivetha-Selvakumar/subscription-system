@@ -258,6 +258,7 @@ public class QueryUtils {
         if (search != null && !search.trim().isEmpty()) {
             Criteria searchCriteria = new Criteria().orOperator(
                     Criteria.where("issue_desc").regex(search, "i"),
+                    Criteria.where("subject").regex(search, "i"),
                     Criteria.where("ticket_status").regex(search, "i"),
                     Criteria.where("status").regex(search, "i")
             );

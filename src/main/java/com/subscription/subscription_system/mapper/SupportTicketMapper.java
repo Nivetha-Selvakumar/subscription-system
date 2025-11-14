@@ -6,8 +6,11 @@ import com.subscription.subscription_system.dto.SupportTicketResponseDetailsDto;
 import com.subscription.subscription_system.entity.SupportResponseEntity;
 import com.subscription.subscription_system.entity.SupportTicketEntity;
 import com.subscription.subscription_system.entity.UserEntity;
+import com.subscription.subscription_system.enumuration.EnumStatusType;
+import com.subscription.subscription_system.enumuration.EnumTicketStatus;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -15,8 +18,18 @@ import java.util.stream.Collectors;
 public class SupportTicketMapper {
 
 
-    public SupportTicketEntity mapToSupportTicket(UserEntity user, String issueDescription) {
-        return null;
+    public SupportTicketEntity mapToSupportTicket(UserEntity user, String issueDescription, String subject) {
+        SupportTicketEntity supportTicketEntity = new SupportTicketEntity();
+        supportTicketEntity.setUser(user);
+        supportTicketEntity.setSubject(subject);
+        supportTicketEntity.setIssueDescription(issueDescription);
+        supportTicketEntity.setTicketStatus(EnumTicketStatus.OPEN);
+        supportTicketEntity.setStatus(EnumStatusType.ACTIVE);
+        supportTicketEntity.setCreatedAt(LocalDateTime.now());
+        supportTicketEntity.setUpdatedAt(LocalDateTime.now());
+        supportTicketEntity.setCreatedBy(user.getFirstName() + " " + user.getLastName());
+        supportTicketEntity.setUpdatedBy(user.getFirstName() + " " + user.getLastName());
+        return supportTicketEntity;
     }
 
     public SupportResponseEntity mapToSupportTicketResponse(
@@ -42,6 +55,7 @@ public class SupportTicketMapper {
         dto.setId(ticket.getId());
         dto.setUser(ticket.getUser());
         dto.setIssueDescription(ticket.getIssueDescription());
+        dto.setSubject(ticket.getSubject());
         dto.setStatus(ticket.getStatus().name());
         dto.setTicketStatus(ticket.getTicketStatus().name());
         dto.setCreatedAt(ticket.getCreatedAt().toString());

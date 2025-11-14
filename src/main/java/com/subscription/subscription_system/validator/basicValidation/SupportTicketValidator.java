@@ -2,6 +2,7 @@ package com.subscription.subscription_system.validator.basicValidation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.subscription.subscription_system.constants.AppFieldConstants;
+import com.subscription.subscription_system.dto.SupportTicketRequestCreateDto;
 import com.subscription.subscription_system.dto.SupportTicketRequestEditDto;
 import com.subscription.subscription_system.dto.SupportTicketResponseCreateDto;
 import com.subscription.subscription_system.dto.SupportTicketResponseEditDto;
@@ -44,12 +45,120 @@ public class SupportTicketValidator {
                 RequestValidationConfig.class);
     }
 
+    public void validateSupportTicketRequestCreate(String userId, SupportTicketRequestCreateDto supportTicketRequestDto) throws ValidationException {
+        // 🧩 Combine header + body params
+        Map<String, String> actualParameters = getSupportTicketRequestParams(userId, supportTicketRequestDto);
+
+        // ---------------- HEADER VALIDATION ----------------
+        log.trace("Validate mandatory field for Support Ticket Create Request Header");
+
+        Map<String, String> formatMapDisplayNameHeader = requestValidationConfig.getSupportTicketRequestCreate().getHeader().stream()
+                .filter(a -> a.getDisplayName() != null)
+                .collect(Collectors.toMap(RequestComponent::getName, RequestComponent::getDisplayName));
+
+        Set<String> mandatoryHeader = requestValidationConfig.getSupportTicketRequestCreate().getHeader().stream()
+                .filter(RequestComponent::getRequired)
+                .map(RequestComponent::getName)
+                .collect(Collectors.toSet());
+
+        ValidationError validationErrorHeader = CommonRequestValidator.validateMandatoryFields(
+                actualParameters,
+                mandatoryHeader,
+                formatMapDisplayNameHeader
+        );
+
+        if (validationErrorHeader != null) {
+            log.warn(ErrorMessages.MSG_VALIDATION, validationErrorHeader);
+            throw ApplicationErrorCode.MISSING_MANDATORY_FIELD.getError()
+                    .reqValidationError(validationErrorHeader.getField(), HttpStatus.BAD_REQUEST.value());
+        }
+
+        log.trace("Validate Field size for Support Ticket Create Request Header");
+        Map<String, Integer> fieldSizeMapHeader = requestValidationConfig.getSupportTicketRequestCreate().getHeader().stream()
+                .collect(Collectors.toMap(RequestComponent::getName, RequestComponent::getMaxLength));
+
+        validationErrorHeader = CommonRequestValidator.validateFieldSize(actualParameters, fieldSizeMapHeader, formatMapDisplayNameHeader);
+        if (validationErrorHeader != null) {
+            log.warn(ErrorMessages.MSG_VALIDATION, validationErrorHeader);
+            throw ApplicationErrorCode.INVALID_FIELD_SIZE.getError()
+                    .reqValidationError(validationErrorHeader.getField(), HttpStatus.BAD_REQUEST.value());
+        }
+
+        log.trace("Validate Field format for Support Ticket Create Request Header");
+        Map<String, String> formatMapHeader = requestValidationConfig.getSupportTicketRequestCreate().getHeader().stream()
+                .filter(a -> a.getFormat() != null)
+                .collect(Collectors.toMap(RequestComponent::getName, RequestComponent::getFormat));
+
+        validationErrorHeader = CommonRequestValidator.validateFieldValueFormat(actualParameters, formatMapHeader, formatMapDisplayNameHeader);
+        if (validationErrorHeader != null) {
+            log.warn(ErrorMessages.MSG_VALIDATION, validationErrorHeader);
+            throw ApplicationErrorCode.INVALID_INPUT_FORMAT.getError()
+                    .reqValidationError(validationErrorHeader.getField(), HttpStatus.BAD_REQUEST.value());
+        }
+
+        // ---------------- BODY VALIDATION ----------------
+        log.trace("Validate mandatory field for Support Ticket Create Request Body");
+
+        Map<String, String> formatMapDisplayNameBody = requestValidationConfig.getSupportTicketRequestCreate().getBody().stream()
+                .filter(a -> a.getDisplayName() != null)
+                .collect(Collectors.toMap(RequestComponent::getName, RequestComponent::getDisplayName));
+
+        Set<String> mandatoryBody = requestValidationConfig.getSupportTicketRequestCreate().getBody().stream()
+                .filter(RequestComponent::getRequired)
+                .map(RequestComponent::getName)
+                .collect(Collectors.toSet());
+
+        ValidationError validationErrorBody = CommonRequestValidator.validateMandatoryFields(
+                actualParameters,
+                mandatoryBody,
+                formatMapDisplayNameBody
+        );
+
+        if (validationErrorBody != null) {
+            log.warn(ErrorMessages.MSG_VALIDATION, validationErrorBody);
+            throw ApplicationErrorCode.MISSING_MANDATORY_FIELD.getError()
+                    .reqValidationError(validationErrorBody.getField(), HttpStatus.BAD_REQUEST.value());
+        }
+
+        log.trace("Validate Field size for Support Ticker Create Request Body");
+        Map<String, Integer> fieldSizeMapBody = requestValidationConfig.getSupportTicketRequestCreate().getBody().stream()
+                .collect(Collectors.toMap(RequestComponent::getName, RequestComponent::getMaxLength));
+
+        validationErrorBody = CommonRequestValidator.validateFieldSize(actualParameters, fieldSizeMapBody, formatMapDisplayNameBody);
+        if (validationErrorBody != null) {
+            log.warn(ErrorMessages.MSG_VALIDATION, validationErrorBody);
+            throw ApplicationErrorCode.INVALID_FIELD_SIZE.getError()
+                    .reqValidationError(validationErrorBody.getField(), HttpStatus.BAD_REQUEST.value());
+        }
+
+        log.trace("Validate Field format for Support ticket  Create Request Body");
+        Map<String, String> formatMapBody = requestValidationConfig.getSupportTicketRequestCreate().getBody().stream()
+                .filter(a -> a.getFormat() != null)
+                .collect(Collectors.toMap(RequestComponent::getName, RequestComponent::getFormat));
+
+        validationErrorBody = CommonRequestValidator.validateFieldValueFormat(actualParameters, formatMapBody, formatMapDisplayNameBody);
+        if (validationErrorBody != null) {
+            log.warn(ErrorMessages.MSG_VALIDATION, validationErrorBody);
+            throw ApplicationErrorCode.INVALID_INPUT_FORMAT.getError()
+                    .reqValidationError(validationErrorBody.getField(), HttpStatus.BAD_REQUEST.value());
+        }
+    }
+
+    private Map<String, String> getSupportTicketRequestParams(String userId, SupportTicketRequestCreateDto supportTicketRequestDto) {
+        Map<String, String> actualParameters = new HashMap<>();
+        actualParameters.put(AppFieldConstants.USERID, userId);
+        actualParameters.put(AppFieldConstants.ISSUE_DESCRIPTION, supportTicketRequestDto.getIssueDescription());
+        actualParameters.put(AppFieldConstants.SUBJECT, supportTicketRequestDto.getSubject());
+        return actualParameters;
+    }
+
+
     public void validateSupportTicketResponseCreate(String userId, String targetTicketId, SupportTicketResponseCreateDto supportTicketRequestDto) throws ValidationException {
         // 🧩 Combine header + body params
         Map<String, String> actualParameters = getSupportTicketResponseParams(userId, targetTicketId, supportTicketRequestDto);
 
         // ---------------- HEADER VALIDATION ----------------
-        log.trace("Validate mandatory field for Plan Create Header");
+        log.trace("Validate mandatory field for Support Ticket Response Create Header");
 
         Map<String, String> formatMapDisplayNameHeader = requestValidationConfig.getSupportResponseCreate().getHeader().stream()
                 .filter(a -> a.getDisplayName() != null)
@@ -72,7 +181,7 @@ public class SupportTicketValidator {
                     .reqValidationError(validationErrorHeader.getField(), HttpStatus.BAD_REQUEST.value());
         }
 
-        log.trace("Validate Field size for Plan Create Header");
+        log.trace("Validate Field size for Support Ticket Response Create Header");
         Map<String, Integer> fieldSizeMapHeader = requestValidationConfig.getSupportResponseCreate().getHeader().stream()
                 .collect(Collectors.toMap(RequestComponent::getName, RequestComponent::getMaxLength));
 
@@ -83,7 +192,7 @@ public class SupportTicketValidator {
                     .reqValidationError(validationErrorHeader.getField(), HttpStatus.BAD_REQUEST.value());
         }
 
-        log.trace("Validate Field format for Plan Create Header");
+        log.trace("Validate Field format for Support Ticket Response Create Header");
         Map<String, String> formatMapHeader = requestValidationConfig.getSupportResponseCreate().getHeader().stream()
                 .filter(a -> a.getFormat() != null)
                 .collect(Collectors.toMap(RequestComponent::getName, RequestComponent::getFormat));
@@ -96,7 +205,7 @@ public class SupportTicketValidator {
         }
 
         // ---------------- BODY VALIDATION ----------------
-        log.trace("Validate mandatory field for Plan Create Body");
+        log.trace("Validate mandatory field for Support Ticket Response Create Body");
 
         Map<String, String> formatMapDisplayNameBody = requestValidationConfig.getSupportResponseCreate().getBody().stream()
                 .filter(a -> a.getDisplayName() != null)
@@ -119,7 +228,7 @@ public class SupportTicketValidator {
                     .reqValidationError(validationErrorBody.getField(), HttpStatus.BAD_REQUEST.value());
         }
 
-        log.trace("Validate Field size for Plan Create Body");
+        log.trace("Validate Field size for Support Ticket Response Create Body");
         Map<String, Integer> fieldSizeMapBody = requestValidationConfig.getSupportResponseCreate().getBody().stream()
                 .collect(Collectors.toMap(RequestComponent::getName, RequestComponent::getMaxLength));
 
@@ -130,7 +239,7 @@ public class SupportTicketValidator {
                     .reqValidationError(validationErrorBody.getField(), HttpStatus.BAD_REQUEST.value());
         }
 
-        log.trace("Validate Field format for Plan Create Body");
+        log.trace("Validate Field format for Support Ticket Repsonse Create Body");
         Map<String, String> formatMapBody = requestValidationConfig.getSupportResponseCreate().getBody().stream()
                 .filter(a -> a.getFormat() != null)
                 .collect(Collectors.toMap(RequestComponent::getName, RequestComponent::getFormat));
@@ -212,7 +321,6 @@ public class SupportTicketValidator {
             throw ApplicationErrorCode.INVALID_INPUT_FORMAT.getError()
                     .reqValidationError(validationErrorQuery.getField(), HttpStatus.BAD_REQUEST.value());
         }
-
 
     }
 

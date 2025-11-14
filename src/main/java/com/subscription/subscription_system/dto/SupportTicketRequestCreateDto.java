@@ -9,5 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class SupportTicketRequestCreateDto {
     private String issueDescription;
+    private String subject;
 
 }

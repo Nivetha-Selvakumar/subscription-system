@@ -1,4 +1,31 @@
 {
+  "supportTicketRequestCreate": {
+    "header": [
+      {
+        "name": "userId",
+        "required": true,
+        "maxLength": 50,
+        "format": "^[A-Za-z0-9_-]+$",
+        "displayName": "User ID"
+      }
+    ],
+    "body": [
+      {
+        "name": "subject",
+        "required": true,
+        "maxLength": 50,
+        "format": null,
+        "displayName": "Subject"
+      },
+      {
+        "name": "issueDescription",
+        "required": true,
+        "maxLength": 500,
+        "format": null,
+        "displayName": "Issue Description"
+      }
+    ]
+  },
   "supportResponseCreate": {
     "header": [
       {
@@ -66,7 +93,7 @@
         "name": "ticketStatus",
         "required": true,
         "maxLength": 50,
-        "format": "^[A-Za-z ]+$",
+        "format": null,
         "displayName": "Ticket Status"
       }
     ]
