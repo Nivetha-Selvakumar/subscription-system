@@ -1,0 +1,137 @@
+{
+  "supportTicketRequestCreate": {
+    "header": [
+      {
+        "name": "userId",
+        "required": true,
+        "maxLength": 50,
+        "format": "^[A-Za-z0-9_-]+$",
+        "displayName": "User ID"
+      }
+    ],
+    "body": [
+      {
+        "name": "subject",
+        "required": true,
+        "maxLength": 50,
+        "format": null,
+        "displayName": "Subject"
+      },
+      {
+        "name": "issueDescription",
+        "required": true,
+        "maxLength": 500,
+        "format": null,
+        "displayName": "Issue Description"
+      }
+    ]
+  },
+  "supportResponseCreate": {
+    "header": [
+      {
+        "name": "userId",
+        "required": true,
+        "maxLength": 50,
+        "format": "^[A-Za-z0-9_-]+$",
+        "displayName": "User ID"
+      }
+    ],
+    "queryParam": [
+      {
+        "name": "targetTicketId",
+        "required": true,
+        "maxLength": 50,
+        "format": "^[A-Za-z0-9_-]+$",
+        "displayName": "Ticket ID"
+      }
+    ],
+    "body": [
+      {
+        "name": "responseText",
+        "required": true,
+        "maxLength": 500,
+        "format": null,
+        "displayName": "Response Text"
+      }
+    ]
+  },
+  "supportTicketRequestEdit": {
+    "header": [
+      {
+        "name": "userId",
+        "required": true,
+        "maxLength": 50,
+        "format": "^[A-Za-z0-9_-]+$",
+        "displayName": "User ID"
+      }
+    ],
+    "queryParam": [
+      {
+        "name": "targetTicketId",
+        "required": true,
+        "maxLength": 50,
+        "format": "^[A-Za-z0-9_-]+$",
+        "displayName": "Ticket ID"
+      }
+    ],
+    "body": [
+      {
+        "name": "issueDescription",
+        "required": true,
+        "maxLength": 500,
+        "format": null,
+        "displayName": "Issue Description"
+      },
+      {
+        "name": "status",
+        "required": true,
+        "maxLength": 50,
+        "format": "^[A-Za-z ]+$",
+        "displayName": "Status"
+      },
+      {
+        "name": "ticketStatus",
+        "required": true,
+        "maxLength": 50,
+        "format": null,
+        "displayName": "Ticket Status"
+      }
+    ]
+  },
+  "supportResponseEdit": {
+    "header": [
+      {
+        "name": "userId",
+        "required": true,
+        "maxLength": 50,
+        "format": "^[A-Za-z0-9_-]+$",
+        "displayName": "User ID"
+      }
+    ],
+    "queryParam": [
+      {
+        "name": "targetResponseId",
+        "required": true,
+        "maxLength": 50,
+        "format": "^[A-Za-z0-9_-]+$",
+        "displayName": "Target Response ID"
+      }
+    ],
+    "body": [
+      {
+        "name": "responseText",
+        "required": true,
+        "maxLength": 500,
+        "format": null,
+        "displayName": "Response Text"
+      },
+      {
+        "name": "status",
+        "required": true,
+        "maxLength": 50,
+        "format": "^[A-Za-z ]+$",
+        "displayName": "Status"
+      }
+    ]
+  }
+}

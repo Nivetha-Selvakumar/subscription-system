@@ -19,6 +19,10 @@ public class RequestValidationConfig {
     RequestValidationItem planEdit;
     RequestValidationItem feedbackCreate;
     RequestValidationItem feedbackEdit;
+    RequestValidationItem supportTicketRequestCreate;
+    RequestValidationItem supportResponseCreate;
+    RequestValidationItem supportTicketRequestEdit;
+    RequestValidationItem supportResponseEdit;
 
 
 }

@@ -35,5 +35,12 @@ public class AppFieldConstants {
     public static final String RATINGS = "ratings";
     public static final String COMMENTS = "comments";
 
+    //ticket
+    public static final String TARGET_TICKET_ID = "targetTicketId";
+    public static final String RESPONSE_TEXT = "responseText";
+    public static final String ISSUE_DESCRIPTION = "issueDescription";
+    public static final String SUBJECT = "subject";
+    public static final String TICKET_DESCRIPTION = "ticketStatus";
+    public static final String TARGET_RESPONSE_ID = "targetResponseId";
 
 }

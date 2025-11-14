@@ -1,6 +1,7 @@
 package com.subscription.subscription_system.utils;
 
 import com.subscription.subscription_system.enumuration.EnumStatusType;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -12,7 +13,6 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 public class QueryUtils {
@@ -235,6 +235,78 @@ public class QueryUtils {
         } else {
             query.with(Sort.by(Sort.Direction.DESC, "createdAt"));
         }
+
+        return query;
+    }
+
+    public static Query buildSupportTicketQuery(
+            String userId,       // null means admin → no user restriction
+            String search,
+            String filterBy,
+            String sortBy,
+            String sortDir
+    ) {
+        Query query = new Query();
+        List<Criteria> andCriteria = new ArrayList<>();
+
+        // 1️⃣ If userId is NOT null → normal user → filter by owner
+        if (userId != null) {
+            andCriteria.add(Criteria.where("user_id").is(userId));
+        }
+
+        // 2️⃣ Search filter
+        if (search != null && !search.trim().isEmpty()) {
+            Criteria searchCriteria = new Criteria().orOperator(
+                    Criteria.where("issue_desc").regex(search, "i"),
+                    Criteria.where("subject").regex(search, "i"),
+                    Criteria.where("ticket_status").regex(search, "i"),
+                    Criteria.where("status").regex(search, "i")
+            );
+            andCriteria.add(searchCriteria);
+        }
+
+        // 3️⃣ filterBy logic (ticketStatus, status)
+        if (filterBy != null && !filterBy.trim().isEmpty()) {
+
+            String[] filters = filterBy.split(",");
+
+            for (String f : filters) {
+                if (!f.contains(":")) continue;
+
+                String[] parts = f.split(":");
+                String key = parts[0].trim();
+                String value = parts[1].trim();
+
+                if (key.isEmpty() || value.isEmpty()) continue;
+
+                switch (key.toLowerCase()) {
+                    case "ticketstatus":
+                        andCriteria.add(Criteria.where("ticket_status")
+                                .regex("^" + value + "$", "i"));
+                        break;
+
+                    case "status":
+                        andCriteria.add(Criteria.where("status")
+                                .regex("^" + value + "$", "i"));
+                        break;
+                }
+            }
+        }
+
+        // 4️⃣ Exclude soft-deleted tickets
+        andCriteria.add(Criteria.where("status").ne(EnumStatusType.DELETE));
+
+        // 5️⃣ Apply all criteria
+        if (!andCriteria.isEmpty()) {
+            query.addCriteria(new Criteria().andOperator(andCriteria.toArray(new Criteria[0])));
+        }
+
+        // 6️⃣ Sorting
+        Sort.Direction direction = "desc".equalsIgnoreCase(sortDir)
+                ? Sort.Direction.DESC
+                : Sort.Direction.ASC;
+
+        query.with(Sort.by(direction, sortBy != null ? sortBy : "created_at"));
 
         return query;
     }
