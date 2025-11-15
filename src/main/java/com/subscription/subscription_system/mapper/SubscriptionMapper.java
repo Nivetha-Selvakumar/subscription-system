@@ -1,0 +1,214 @@
+package com.subscription.subscription_system.mapper;
+
+import com.subscription.subscription_system.dto.*;
+import com.subscription.subscription_system.entity.*;
+import com.subscription.subscription_system.enumuration.EnumStatusType;
+import com.subscription.subscription_system.enumuration.EnumSubscriptionStatus;
+import org.springframework.stereotype.Component;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+@Component
+public class SubscriptionMapper {
+
+    // ------------------------------------------------------
+    // CREATE SUBSCRIBER MAPPING
+    // ------------------------------------------------------
+    public SubscriberEntity mapToNewSubscriber(
+            UserEntity user,
+            SubscriptionPlanEntity plan,
+            SubscriptionCreateDto dto
+    ) {
+
+        SubscriberEntity subscriber = new SubscriberEntity();
+        subscriber.setUser(user);
+        subscriber.setStatus(EnumStatusType.ACTIVE);
+        subscriber.setCurrentSubStatus(EnumSubscriptionStatus.ACTIVE);
+
+        subscriber.setSubStartDate(LocalDate.now().toString());
+        subscriber.setSubEndDate(LocalDate.now().plusMonths(1).toString());
+        subscriber.setJoinDate(LocalDate.now().toString());
+
+        subscriber.setCreatedAt(LocalDateTime.now());
+        subscriber.setCreatedBy(user.getFirstName() + " " + user.getLastName());
+        subscriber.setUpdatedAt(LocalDateTime.now());
+        subscriber.setUpdatedBy(user.getFirstName() + " " + user.getLastName());
+
+        return subscriber;
+    }
+
+    // ------------------------------------------------------
+    // RENEW SUBSCRIBER MAPPING
+    // ------------------------------------------------------
+    public void mapRenewalToSubscriber(
+            SubscriberEntity subscriber,
+            SubscriptionPlanEntity plan,
+            SubscriptionEditDto dto
+    ) {
+        subscriber.setCurrentSubStatus(EnumSubscriptionStatus.ACTIVE);
+        subscriber.setSubEndDate(LocalDate.now().plusMonths(1).toString());
+        subscriber.setUpdatedAt(LocalDateTime.now());
+    }
+
+    // ------------------------------------------------------
+    // INITIAL PAYMENT
+    // ------------------------------------------------------
+    public PaymentEntity mapToInitialPayment(
+            UserEntity user,
+            SubscriptionPlanEntity plan,
+            SubscriptionCreateDto dto
+    ) {
+
+        PaymentEntity payment = new PaymentEntity();
+
+        payment.setUser(user);
+        payment.setPlan(plan);
+        payment.setAmount(Double.valueOf(dto.getAmount()));
+        payment.setPaymentStatus(dto.getPaymentStatus());
+        payment.setPaymentDate(LocalDate.now().toString());
+        payment.setStatus(EnumStatusType.ACTIVE.getName());
+
+        payment.setCreatedAt(LocalDateTime.now());
+        payment.setCreatedBy(user.getFirstName() + " " + user.getLastName());
+
+        return payment;
+    }
+
+    // ------------------------------------------------------
+    // RENEW PAYMENT
+    // ------------------------------------------------------
+    public PaymentEntity mapToRenewalPayment(
+            UserEntity user,
+            SubscriptionPlanEntity plan,
+            SubscriptionEditDto dto
+    ) {
+
+        PaymentEntity payment = new PaymentEntity();
+
+        payment.setUser(user);
+        payment.setPlan(plan);
+        payment.setAmount(dto.getRenewAmount());
+        payment.setPaymentStatus(dto.getPaymentStatus());
+        payment.setPaymentDate(LocalDate.now().toString());
+        payment.setStatus(EnumStatusType.ACTIVE.getName());
+
+        payment.setCreatedAt(LocalDateTime.now());
+        payment.setCreatedBy(user.getFirstName() + " " + user.getLastName());
+
+        return payment;
+    }
+
+    // ------------------------------------------------------
+    // SUBSCRIPTION DETAILS DTO
+    // ------------------------------------------------------
+    public SubscriptionDetailsDto mapSubscriberToDetailsDto(
+            SubscriberEntity subscriber,
+            SubscriptionPlanEntity plan,
+            PaymentEntity payment
+    ) {
+        SubscriptionDetailsDto dto = new SubscriptionDetailsDto();
+
+        dto.setSubscriptionId(subscriber.getId());
+        dto.setPlanId(plan.getId());
+        dto.setPlanName(plan.getPlanName());
+        dto.setPlanType(plan.getPlanType().toString());
+        dto.setCost(plan.getCost());
+
+        dto.setCurrentSubStatus(subscriber.getCurrentSubStatus().getName());
+        dto.setSubStartDate(subscriber.getSubStartDate());
+        dto.setSubEndDate(subscriber.getSubEndDate());
+
+        dto.setLastPaidAmount(payment.getAmount());
+        dto.setLastPaymentStatus(payment.getPaymentStatus());
+        dto.setLastPaymentDate(payment.getPaymentDate());
+
+        return dto;
+    }
+
+    // ------------------------------------------------------
+    // BASIC DTO (after cancel)
+    // ------------------------------------------------------
+    public SubscriptionDetailsDto mapSubscriberToBasicDto(
+            SubscriberEntity subscriber,
+            SubscriptionPlanEntity plan
+    ) {
+        SubscriptionDetailsDto dto = new SubscriptionDetailsDto();
+        dto.setSubscriptionId(subscriber.getId());
+        dto.setPlanId(plan.getId());
+        dto.setPlanName(plan.getPlanName());
+        dto.setPlanType(plan.getPlanType().toString());
+        dto.setCurrentSubStatus(subscriber.getCurrentSubStatus().getName());
+        dto.setSubStartDate(subscriber.getSubStartDate());
+        dto.setSubEndDate(subscriber.getSubEndDate());
+        return dto;
+    }
+
+    // ===========================================================
+    // MAP: Subscriber + Plan + Payment → SubscriptionDetailsDto
+    // ===========================================================
+    public SubscriptionDetailsDto mapSubscriberToBasicDto(
+            SubscriberEntity subscriber,
+            SubscriptionPlanEntity plan,
+            PaymentEntity latestPayment
+    ) {
+        SubscriptionDetailsDto dto = new SubscriptionDetailsDto();
+
+        dto.setSubscriptionId(subscriber.getId());
+
+        // ---- PLAN DETAILS ----
+        if (plan != null) {
+            dto.setPlanId(plan.getId());
+            dto.setPlanName(plan.getPlanName());
+            dto.setPlanType(plan.getPlanType() != null ? plan.getPlanType().getValue() : null);
+            dto.setCost(plan.getCost());
+        }
+
+        // ---- SUBSCRIBER DETAILS ----
+        dto.setCurrentSubStatus(
+                subscriber.getCurrentSubStatus() != null ? subscriber.getCurrentSubStatus().getValue() : null
+        );
+        dto.setSubStartDate(subscriber.getSubStartDate());
+        dto.setSubEndDate(subscriber.getSubEndDate());
+
+        // ---- LAST PAYMENT ----
+        if (latestPayment != null) {
+            dto.setLastPaidAmount(latestPayment.getAmount());
+            dto.setLastPaymentStatus(latestPayment.getPaymentStatus());
+            dto.setLastPaymentDate(latestPayment.getPaymentDate());
+        }
+
+        return dto;
+    }
+
+    // ===========================================================
+    // MAP PAYMENT → SubscriptionDetailsDto  (List View)
+    // ===========================================================
+    public SubscriptionDetailsDto mapPaymentToSubscriptionDto(PaymentEntity payment) {
+
+        SubscriptionDetailsDto dto = new SubscriptionDetailsDto();
+
+        // Payment parent subscriber is not available here → only plan + payment
+
+        SubscriptionPlanEntity plan = payment.getPlan();
+
+        dto.setSubscriptionId(null); // not available in payment
+        dto.setPlanId(plan != null ? plan.getId() : null);
+        dto.setPlanName(plan != null ? plan.getPlanName() : null);
+        dto.setPlanType(plan != null && plan.getPlanType() != null ? plan.getPlanType().getValue() : null);
+        dto.setCost(plan != null ? plan.getCost() : null);
+
+        dto.setCurrentSubStatus(null); // not available from Payment
+
+        dto.setSubStartDate(null);
+        dto.setSubEndDate(null);
+
+        dto.setLastPaidAmount(payment.getAmount());
+        dto.setLastPaymentStatus(payment.getPaymentStatus());
+        dto.setLastPaymentDate(payment.getPaymentDate());
+
+        return dto;
+    }
+
+
+}

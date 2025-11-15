@@ -88,7 +88,7 @@ public class UserMapper {
         }
 
         if (subscriberEntity != null) {
-            userDetailsDto.setCurrentSubStatus(subscriberEntity.getCurrentSubStatus());
+            userDetailsDto.setCurrentSubStatus(subscriberEntity.getCurrentSubStatus().getName());
             userDetailsDto.setSubStartDate(subscriberEntity.getSubStartDate());
             userDetailsDto.setSubEndDate(subscriberEntity.getSubEndDate());
             userDetailsDto.setJoinDate(subscriberEntity.getJoinDate());

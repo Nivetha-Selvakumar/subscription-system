@@ -1,7 +1,6 @@
 package com.subscription.subscription_system.utils;
 
 import com.subscription.subscription_system.enumuration.EnumStatusType;
-import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -311,5 +310,97 @@ public class QueryUtils {
         return query;
     }
 
+    /**
+     * Build Mongo query for Subscription Entity
+     */
+    public static Query buildSubscriptionQuery(
+            String userId,      // null → admin can see all, userId != null → filter only user's subscriptions
+            String search,
+            String filterBy,    // status:ACTIVE,currentSubStatus:ACTIVE,paymentStatus:PAID
+            String sortBy,
+            String sortDir
+    ) {
+
+        Query query = new Query();
+        List<Criteria> andCriteria = new ArrayList<>();
+
+        // 1️⃣ If user → filter subscriptions owned by that user
+        if (userId != null) {
+            andCriteria.add(Criteria.where("user_id").is(userId));
+        }
+
+        // 2️⃣ Search filter
+        if (search != null && !search.trim().isEmpty()) {
+            Criteria searchCriteria = new Criteria().orOperator(
+                    Criteria.where("plan.plan_name").regex(search, "i"),
+                    Criteria.where("plan.plan_type").regex(search, "i"),
+                    Criteria.where("payment_status").regex(search, "i"),
+                    Criteria.where("current_sub_status").regex(search, "i"),
+                    Criteria.where("amount").regex(search, "i")
+            );
+            andCriteria.add(searchCriteria);
+        }
+
+        // 3️⃣ filterBy key:value,key:value
+        if (filterBy != null && !filterBy.trim().isEmpty()) {
+
+            String[] filters = filterBy.split(",");
+
+            for (String f : filters) {
+
+                if (!f.contains(":")) continue;
+
+                String[] parts = f.split(":");
+                String key = parts[0].trim();
+                String value = parts[1].trim();
+
+                if (key.isEmpty() || value.isEmpty()) continue;
+
+                switch (key.toLowerCase()) {
+
+                    case "paymentstatus":
+                        andCriteria.add(Criteria.where("payment_status")
+                                .regex("^" + value + "$", "i"));
+                        break;
+
+                    case "currentsubstatus":
+                        andCriteria.add(Criteria.where("current_sub_status")
+                                .regex("^" + value + "$", "i"));
+                        break;
+
+                    case "status":
+                        andCriteria.add(Criteria.where("status")
+                                .regex("^" + value + "$", "i"));
+                        break;
+
+                    case "plantype":
+                        andCriteria.add(Criteria.where("plan.plan_type")
+                                .regex("^" + value + "$", "i"));
+                        break;
+
+                    case "planname":
+                        andCriteria.add(Criteria.where("plan.plan_name")
+                                .regex("^" + value + "$", "i"));
+                        break;
+                }
+            }
+        }
+
+        // 4️⃣ Exclude soft-deleted subscriptions
+        andCriteria.add(Criteria.where("status").ne(EnumStatusType.DELETE));
+
+        // 5️⃣ Apply all criteria (only once)
+        if (!andCriteria.isEmpty()) {
+            query.addCriteria(new Criteria().andOperator(andCriteria.toArray(new Criteria[0])));
+        }
+
+        // 6️⃣ Sorting
+        Sort.Direction direction =
+                "desc".equalsIgnoreCase(sortDir) ? Sort.Direction.DESC : Sort.Direction.ASC;
+
+        query.with(Sort.by(direction, sortBy != null ? sortBy : "created_at"));
+
+        return query;
+    }
 
 }

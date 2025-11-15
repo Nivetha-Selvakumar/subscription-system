@@ -23,6 +23,9 @@ public class RequestValidationConfig {
     RequestValidationItem supportResponseCreate;
     RequestValidationItem supportTicketRequestEdit;
     RequestValidationItem supportResponseEdit;
+    RequestValidationItem subscriptionCreate;
+    RequestValidationItem subscriptionEdit;
+    RequestValidationItem subscriptionCancel;
 
 
 }

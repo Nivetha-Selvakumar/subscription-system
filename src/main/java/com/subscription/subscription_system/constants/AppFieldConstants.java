@@ -43,4 +43,12 @@ public class AppFieldConstants {
     public static final String TICKET_DESCRIPTION = "ticketStatus";
     public static final String TARGET_RESPONSE_ID = "targetResponseId";
 
+    //Subscription
+    public static final String PLAN_ID = "planId";
+    public static final String AMOUNT = "amount";
+    public static final String RENEW_AMOUNT = "renewAmount";
+    public static final String PAYMENT_STATUS = "paymentStatus";
+    public static final String CURRENT_SUB_STATUS = "currentSubStatus";
+
+
 }

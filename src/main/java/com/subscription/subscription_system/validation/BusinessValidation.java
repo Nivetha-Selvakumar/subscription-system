@@ -1,21 +1,21 @@
 package com.subscription.subscription_system.validation;
 
-import com.subscription.subscription_system.entity.AdminEntity;
-import com.subscription.subscription_system.entity.FeedbackEntity;
-import com.subscription.subscription_system.entity.SubscriptionPlanEntity;
-import com.subscription.subscription_system.entity.UserEntity;
+import com.subscription.subscription_system.entity.*;
 import com.subscription.subscription_system.enumuration.EnumPlanType;
 import com.subscription.subscription_system.enumuration.EnumStatusType;
+import com.subscription.subscription_system.enumuration.EnumSubscriptionStatus;
 import com.subscription.subscription_system.enumuration.EnumUserType;
 import com.subscription.subscription_system.exception.CommonException;
-import com.subscription.subscription_system.repository.AdminRepo;
-import com.subscription.subscription_system.repository.FeedbackRepo;
-import com.subscription.subscription_system.repository.SubscriptionPlanRepo;
-import com.subscription.subscription_system.repository.UserRepo;
+import com.subscription.subscription_system.repository.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+
 
 import java.util.List;
 import java.util.Optional;
@@ -35,6 +35,15 @@ public class BusinessValidation {
 
     @Autowired
     FeedbackRepo feedbackRepo;
+
+    @Autowired
+    SubscriberRepo subscriberRepo;
+
+    @Autowired
+    PaymentRepo paymentRepo;
+
+    @Autowired
+    MongoTemplate mongoTemplate;
 
     public BusinessValidation(UserRepo userRepo, AdminRepo adminRepo) {
         this.userRepo = userRepo;
@@ -171,6 +180,85 @@ public class BusinessValidation {
     public FeedbackEntity feedbackExist(String feedbackId) throws CommonException {
         return feedbackRepo.findByIdAndStatusNot(feedbackId, EnumStatusType.DELETE)
                 .orElseThrow(() -> new CommonException("Feedback not found or deleted",HttpStatus.NO_CONTENT.value()));
+    }
+
+    public void validateUserAlreadySubscribed(UserEntity user, SubscriptionPlanEntity plan) throws CommonException {
+        log.info("Checking if user already subscribed to this plan");
+
+        Optional<SubscriberEntity> existing =
+                subscriberRepo.findByUserAndPlanAndCurrentSubStatus(
+                        user,
+                        plan,
+                        EnumSubscriptionStatus.ACTIVE
+                );
+
+        if (existing.isPresent()) {
+            throw new CommonException("User already has an active subscription for this plan",
+                    HttpStatus.BAD_REQUEST.value());
+        }
+    }
+
+    public SubscriberEntity subscriberExist(UserEntity user, SubscriptionPlanEntity plan) throws CommonException {
+        log.info("Validating existing subscription for user {}", user.getId());
+
+        return subscriberRepo.findByUserAndPlanAndStatus(user, plan,EnumStatusType.ACTIVE)
+                .orElseThrow(() -> new CommonException("Subscription not found", HttpStatus.BAD_REQUEST.value()));
+    }
+
+    public SubscriberEntity subscriptionExistById(String subscriptionId) throws CommonException {
+        return subscriberRepo.findById(subscriptionId)
+                .orElseThrow(() -> new CommonException("Subscription not found", HttpStatus.BAD_REQUEST.value()));
+    }
+
+    public void validateSubscriptionBelongsToUser(UserEntity user, SubscriberEntity subscriber) throws CommonException {
+        if (!subscriber.getUser().getId().equals(user.getId())) {
+            throw new CommonException("This subscription does not belong to the user",
+                    HttpStatus.UNAUTHORIZED.value());
+        }
+    }
+
+    public void validateSubscriptionRenewal(SubscriberEntity subscriber) throws CommonException {
+        log.info("Validating renewal for subscription {}", subscriber.getId());
+
+        if (subscriber.getCurrentSubStatus() == EnumSubscriptionStatus.CANCELLED) {
+            throw new CommonException("Cancelled subscription cannot be renewed",
+                    HttpStatus.BAD_REQUEST.value());
+        }
+    }
+
+    public void validateSubscriptionCancel(SubscriberEntity subscriber) throws CommonException {
+        log.info("Validating cancellation for subscription {}", subscriber.getId());
+
+        if (subscriber.getCurrentSubStatus() == EnumSubscriptionStatus.CANCELLED) {
+            throw new CommonException("Subscription already cancelled",
+                    HttpStatus.BAD_REQUEST.value());
+        }
+
+        if (subscriber.getCurrentSubStatus() == EnumSubscriptionStatus.EXPIRED) {
+            throw new CommonException("Expired subscription cannot be cancelled",
+                    HttpStatus.BAD_REQUEST.value());
+        }
+    }
+
+    public PaymentEntity getLatestPayment(String userId, String planId) throws CommonException {
+
+        // 1️⃣ Validate User Exists
+        UserEntity user = validateUserOrNot(userId);
+
+        // 2️⃣ Validate Plan Exists
+        SubscriptionPlanEntity plan = subscriptionPlanExist(planId);
+
+        // 3️⃣ Build Query to fetch LATEST payment
+        Query query = new Query();
+        query.addCriteria(Criteria.where("user_id").is(user.getId()));
+        query.addCriteria(Criteria.where("plan_id").is(plan.getId()));
+        query.with(Sort.by(Sort.Direction.DESC, "created_at"));
+        query.limit(1);
+
+        // 4️⃣ Find latest payment
+        PaymentEntity latestPayment = mongoTemplate.findOne(query, PaymentEntity.class);
+
+        return latestPayment;  // null if no payments found
     }
 
 }
