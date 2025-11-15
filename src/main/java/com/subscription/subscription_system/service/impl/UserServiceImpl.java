@@ -218,7 +218,7 @@ public class UserServiceImpl implements UserService {
                     subscriberEntity = new SubscriberEntity();
                     subscriberEntity.setUser(targetUser);
                 }
-                subscriberEntity.setCurrentSubStatus(editDto.getCurrentSubStatus());
+                subscriberEntity.setCurrentSubStatus(EnumSubscriptionStatus.fromValue(editDto.getCurrentSubStatus()));
                 subscriberEntity.setSubStartDate(editDto.getSubStartDate());
                 subscriberEntity.setSubEndDate(editDto.getSubEndDate());
                 subscriberEntity.setJoinDate(editDto.getJoinDate());
@@ -333,7 +333,7 @@ public class UserServiceImpl implements UserService {
         } else if (userCreateDto.getRole().equalsIgnoreCase(EnumUserType.SUBSCRIBER.getValue())) {
             SubscriberEntity subscriberEntity = new SubscriberEntity();
             subscriberEntity.setUser(userEntity);
-            subscriberEntity.setCurrentSubStatus(EnumSubscriptionStatus.fromValue(userCreateDto.getCurrentSubStatus()).getName());
+            subscriberEntity.setCurrentSubStatus(EnumSubscriptionStatus.fromValue(userCreateDto.getCurrentSubStatus()));
             DateTimeFormatter storeFormatter = new DateTimeFormatterBuilder()
                     .parseCaseInsensitive()
                     .appendPattern("yyyy-MMM-dd")

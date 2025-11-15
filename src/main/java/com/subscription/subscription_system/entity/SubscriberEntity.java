@@ -1,6 +1,7 @@
 package com.subscription.subscription_system.entity;
 
 import com.subscription.subscription_system.enumuration.EnumStatusType;
+import com.subscription.subscription_system.enumuration.EnumSubscriptionStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,8 +27,12 @@ public class SubscriberEntity {
     @Field("user_id")
     private UserEntity user;
 
+    @DBRef(lazy = true)
+    @Field("plan_id")
+    private SubscriptionPlanEntity plan;
+
     @Field("current_sub_status")
-    private String currentSubStatus;
+    private EnumSubscriptionStatus currentSubStatus;
 
     @Field("sub_start_dt")
     private String subStartDate;

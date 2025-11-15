@@ -5,12 +5,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-public class SubscriptionCreateDto {
+@AllArgsConstructor
+public class SubscriptionEditDto {
 
-    private String amount;
+    private Double renewAmount;
     private String paymentStatus;
-    private String currentSubStatus;
-
 }

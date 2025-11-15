@@ -1,0 +1,101 @@
+{
+  "subscriptionCreate": {
+    "header": [
+      {
+        "name": "userId",
+        "required": true,
+        "maxLength": 25,
+        "format": null,
+        "displayName": "User Id"
+      }
+    ],
+    "queryParam": [
+      {
+        "name": "planId",
+        "required": true,
+        "maxLength": 25,
+        "format": null,
+        "displayName": "Plan Id"
+      }
+    ],
+    "body": [
+      {
+        "name": "amount",
+        "required": true,
+        "maxLength": 10,
+        "format": "^[0-9.]+$",
+        "displayName": "Amount"
+      },
+      {
+        "name": "paymentStatus",
+        "required": true,
+        "maxLength": 20,
+        "format": "^[A-Za-z_]+$",
+        "displayName": "Payment Status"
+      },
+      {
+        "name": "currentSubStatus",
+        "required": true,
+        "maxLength": 20,
+        "format": "^[A-Za-z_]+$",
+        "displayName": "Current Subscription Status"
+      }
+    ]
+  },
+  "subscriptionEdit": {
+    "header": [
+      {
+        "name": "userId",
+        "required": true,
+        "maxLength": 25,
+        "format": null,
+        "displayName": "User Id"
+      }
+    ],
+    "queryParam": [
+      {
+        "name": "planId",
+        "required": true,
+        "maxLength": 25,
+        "format": null,
+        "displayName": "Plan Id"
+      }
+    ],
+    "body": [
+      {
+        "name": "renewAmount",
+        "required": true,
+        "maxLength": 10,
+        "format": "^[0-9.]+$",
+        "displayName": "Renew Amount"
+      },
+      {
+        "name": "paymentStatus",
+        "required": true,
+        "maxLength": 20,
+        "format": "^[A-Za-z_]+$",
+        "displayName": "Payment Status"
+      }
+    ]
+  },
+  "subscriptionCancel": {
+    "header": [
+      {
+        "name": "userId",
+        "required": true,
+        "maxLength": 25,
+        "format": null,
+        "displayName": "User Id"
+      }
+    ],
+    "queryParam": [
+      {
+        "name": "planId",
+        "required": true,
+        "maxLength": 25,
+        "format": null,
+        "displayName": "Plan Id"
+      }
+    ]
+  }
+}
