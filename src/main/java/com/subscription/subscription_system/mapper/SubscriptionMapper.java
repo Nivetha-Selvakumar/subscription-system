@@ -2,6 +2,7 @@ package com.subscription.subscription_system.mapper;
 
 import com.subscription.subscription_system.dto.*;
 import com.subscription.subscription_system.entity.*;
+import com.subscription.subscription_system.enumuration.EnumPaymentStatus;
 import com.subscription.subscription_system.enumuration.EnumStatusType;
 import com.subscription.subscription_system.enumuration.EnumSubscriptionStatus;
 import org.springframework.stereotype.Component;
@@ -65,7 +66,7 @@ public class SubscriptionMapper {
         payment.setUser(user);
         payment.setPlan(plan);
         payment.setAmount(Double.valueOf(dto.getAmount()));
-        payment.setPaymentStatus(dto.getPaymentStatus());
+        payment.setPaymentStatus(EnumPaymentStatus.fromValue(dto.getPaymentStatus()));
         payment.setPaymentDate(LocalDate.now().toString());
         payment.setStatus(EnumStatusType.ACTIVE.getName());
 
@@ -89,7 +90,7 @@ public class SubscriptionMapper {
         payment.setUser(user);
         payment.setPlan(plan);
         payment.setAmount(dto.getRenewAmount());
-        payment.setPaymentStatus(dto.getPaymentStatus());
+        payment.setPaymentStatus(EnumPaymentStatus.fromValue(dto.getPaymentStatus()));
         payment.setPaymentDate(LocalDate.now().toString());
         payment.setStatus(EnumStatusType.ACTIVE.getName());
 
@@ -120,7 +121,7 @@ public class SubscriptionMapper {
         dto.setSubEndDate(subscriber.getSubEndDate());
 
         dto.setLastPaidAmount(payment.getAmount());
-        dto.setLastPaymentStatus(payment.getPaymentStatus());
+        dto.setLastPaymentStatus(payment.getPaymentStatus().getValue());
         dto.setLastPaymentDate(payment.getPaymentDate());
 
         return dto;
@@ -174,7 +175,7 @@ public class SubscriptionMapper {
         // ---- LAST PAYMENT ----
         if (latestPayment != null) {
             dto.setLastPaidAmount(latestPayment.getAmount());
-            dto.setLastPaymentStatus(latestPayment.getPaymentStatus());
+            dto.setLastPaymentStatus(latestPayment.getPaymentStatus().getValue());
             dto.setLastPaymentDate(latestPayment.getPaymentDate());
         }
 
@@ -204,7 +205,7 @@ public class SubscriptionMapper {
         dto.setSubEndDate(null);
 
         dto.setLastPaidAmount(payment.getAmount());
-        dto.setLastPaymentStatus(payment.getPaymentStatus());
+        dto.setLastPaymentStatus(payment.getPaymentStatus().getValue());
         dto.setLastPaymentDate(payment.getPaymentDate());
 
         return dto;

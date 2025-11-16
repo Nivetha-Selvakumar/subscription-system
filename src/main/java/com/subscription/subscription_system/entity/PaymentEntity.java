@@ -1,5 +1,6 @@
 package com.subscription.subscription_system.entity;
 
+import com.subscription.subscription_system.enumuration.EnumPaymentStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -36,7 +37,7 @@ public class PaymentEntity {
     private String paymentDate;
 
     @Field("payment_status")
-    private String paymentStatus;
+    private EnumPaymentStatus paymentStatus;
 
     @Field("status")
     private String status;
