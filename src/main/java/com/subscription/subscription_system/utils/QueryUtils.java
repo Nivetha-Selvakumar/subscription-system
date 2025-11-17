@@ -386,6 +386,11 @@ public class QueryUtils {
             }
         }
 
+        if (userId != null) {
+            andCriteria.add(Criteria.where("user_id").is(userId));
+        }
+
+
         // 4️⃣ Exclude soft-deleted subscriptions
         andCriteria.add(Criteria.where("status").ne(EnumStatusType.DELETE));
 

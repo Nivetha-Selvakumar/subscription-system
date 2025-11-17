@@ -2,6 +2,8 @@ package com.subscription.subscription_system.mapper;
 
 import com.subscription.subscription_system.dto.*;
 import com.subscription.subscription_system.entity.*;
+import com.subscription.subscription_system.enumuration.EnumPaymentStatus;
+import com.subscription.subscription_system.enumuration.EnumPlanType;
 import com.subscription.subscription_system.enumuration.EnumStatusType;
 import com.subscription.subscription_system.enumuration.EnumSubscriptionStatus;
 import org.springframework.stereotype.Component;
@@ -22,30 +24,49 @@ public class SubscriptionMapper {
     ) {
 
         SubscriberEntity subscriber = new SubscriberEntity();
+
         subscriber.setUser(user);
+        subscriber.setPlan(plan);
+
         subscriber.setStatus(EnumStatusType.ACTIVE);
         subscriber.setCurrentSubStatus(EnumSubscriptionStatus.ACTIVE);
 
-        subscriber.setSubStartDate(LocalDate.now().toString());
-        subscriber.setSubEndDate(LocalDate.now().plusMonths(1).toString());
-        subscriber.setJoinDate(LocalDate.now().toString());
+        // ---------- DATE CALCULATION FIXED ----------
+        LocalDate start = LocalDate.now();
+        LocalDate end;
+
+        if (plan.getPlanType() == EnumPlanType.MONTHLY) {
+            end = start.plusMonths(1);
+        } else if (plan.getPlanType() == EnumPlanType.YEARLY) {
+            end = start.plusYears(1);
+        } else {
+            // fallback (if future plan types are added)
+            end = start.plusMonths(1);
+        }
+
+        subscriber.setSubStartDate(start.toString());
+        subscriber.setSubEndDate(end.toString());
+        subscriber.setJoinDate(start.toString());
+        // ---------------------------------------------
 
         subscriber.setCreatedAt(LocalDateTime.now());
         subscriber.setCreatedBy(user.getFirstName() + " " + user.getLastName());
+
         subscriber.setUpdatedAt(LocalDateTime.now());
         subscriber.setUpdatedBy(user.getFirstName() + " " + user.getLastName());
 
         return subscriber;
     }
 
+
     // ------------------------------------------------------
     // RENEW SUBSCRIBER MAPPING
     // ------------------------------------------------------
     public void mapRenewalToSubscriber(
             SubscriberEntity subscriber,
-            SubscriptionPlanEntity plan,
-            SubscriptionEditDto dto
+            SubscriptionPlanEntity plan
     ) {
+        subscriber.setPlan(plan);
         subscriber.setCurrentSubStatus(EnumSubscriptionStatus.ACTIVE);
         subscriber.setSubEndDate(LocalDate.now().plusMonths(1).toString());
         subscriber.setUpdatedAt(LocalDateTime.now());
@@ -65,7 +86,7 @@ public class SubscriptionMapper {
         payment.setUser(user);
         payment.setPlan(plan);
         payment.setAmount(Double.valueOf(dto.getAmount()));
-        payment.setPaymentStatus(dto.getPaymentStatus());
+        payment.setPaymentStatus(EnumPaymentStatus.fromValue(dto.getPaymentStatus()));
         payment.setPaymentDate(LocalDate.now().toString());
         payment.setStatus(EnumStatusType.ACTIVE.getName());
 
@@ -89,7 +110,7 @@ public class SubscriptionMapper {
         payment.setUser(user);
         payment.setPlan(plan);
         payment.setAmount(dto.getRenewAmount());
-        payment.setPaymentStatus(dto.getPaymentStatus());
+        payment.setPaymentStatus(EnumPaymentStatus.fromValue(dto.getPaymentStatus()));
         payment.setPaymentDate(LocalDate.now().toString());
         payment.setStatus(EnumStatusType.ACTIVE.getName());
 
@@ -108,19 +129,26 @@ public class SubscriptionMapper {
             PaymentEntity payment
     ) {
         SubscriptionDetailsDto dto = new SubscriptionDetailsDto();
+        if (subscriber != null) {
+            dto.setSubscriptionId(subscriber.getId());
+            dto.setCurrentSubStatus(subscriber.getCurrentSubStatus().getName());
+            dto.setSubStartDate(subscriber.getSubStartDate());
+            dto.setSubEndDate(subscriber.getSubEndDate());
+        } else {
+            dto.setSubscriptionId(null);
+            dto.setCurrentSubStatus(null);
+            dto.setSubStartDate(null);
+            dto.setSubEndDate(null);
+        }
 
-        dto.setSubscriptionId(subscriber.getId());
         dto.setPlanId(plan.getId());
         dto.setPlanName(plan.getPlanName());
         dto.setPlanType(plan.getPlanType().toString());
         dto.setCost(plan.getCost());
 
-        dto.setCurrentSubStatus(subscriber.getCurrentSubStatus().getName());
-        dto.setSubStartDate(subscriber.getSubStartDate());
-        dto.setSubEndDate(subscriber.getSubEndDate());
 
         dto.setLastPaidAmount(payment.getAmount());
-        dto.setLastPaymentStatus(payment.getPaymentStatus());
+        dto.setLastPaymentStatus(payment.getPaymentStatus().getValue());
         dto.setLastPaymentDate(payment.getPaymentDate());
 
         return dto;
@@ -174,7 +202,7 @@ public class SubscriptionMapper {
         // ---- LAST PAYMENT ----
         if (latestPayment != null) {
             dto.setLastPaidAmount(latestPayment.getAmount());
-            dto.setLastPaymentStatus(latestPayment.getPaymentStatus());
+            dto.setLastPaymentStatus(latestPayment.getPaymentStatus().getValue());
             dto.setLastPaymentDate(latestPayment.getPaymentDate());
         }
 
@@ -184,27 +212,30 @@ public class SubscriptionMapper {
     // ===========================================================
     // MAP PAYMENT → SubscriptionDetailsDto  (List View)
     // ===========================================================
-    public SubscriptionDetailsDto mapPaymentToSubscriptionDto(PaymentEntity payment) {
+    public SubscriptionDetailsDto mapPaymentListDto(PaymentEntity payment,
+                                                    SubscriberEntity subscriber) {
 
         SubscriptionDetailsDto dto = new SubscriptionDetailsDto();
 
-        // Payment parent subscriber is not available here → only plan + payment
-
         SubscriptionPlanEntity plan = payment.getPlan();
 
-        dto.setSubscriptionId(null); // not available in payment
+        dto.setSubscriptionId(subscriber != null ? subscriber.getId() : null);
         dto.setPlanId(plan != null ? plan.getId() : null);
         dto.setPlanName(plan != null ? plan.getPlanName() : null);
-        dto.setPlanType(plan != null && plan.getPlanType() != null ? plan.getPlanType().getValue() : null);
+        dto.setPlanType(plan != null ? plan.getPlanType().getValue() : null);
         dto.setCost(plan != null ? plan.getCost() : null);
 
-        dto.setCurrentSubStatus(null); // not available from Payment
+        // Subscriber fields
+        dto.setCurrentSubStatus(subscriber != null && subscriber.getCurrentSubStatus() != null
+                ? subscriber.getCurrentSubStatus().getValue()
+                : "-");
 
-        dto.setSubStartDate(null);
-        dto.setSubEndDate(null);
+        dto.setSubStartDate(subscriber != null ? subscriber.getSubStartDate() : null);
+        dto.setSubEndDate(subscriber != null ? subscriber.getSubEndDate() : null);
 
+        // Payment fields
         dto.setLastPaidAmount(payment.getAmount());
-        dto.setLastPaymentStatus(payment.getPaymentStatus());
+        dto.setLastPaymentStatus(payment.getPaymentStatus().getValue());
         dto.setLastPaymentDate(payment.getPaymentDate());
 
         return dto;

@@ -82,7 +82,7 @@ public class SubscriptionController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/get/subscriptionList")
+    @GetMapping("/get/subscriptionPaymentList")
     public ResponseEntity<CommonResponseDto> getSubscriptionPaymentList(@RequestHeader("User-Id") String userId,
                                                          @RequestParam(required = false) String search,
                                                          @RequestParam(required = false) String filterBy,  // format: key:value,key:value

@@ -103,8 +103,8 @@ public class UserServiceImpl implements UserService {
 
         UserEntity user = optionalUser.get();
         String role = user.getRole().name().toLowerCase();
-        AdminEntity adminEntity = new AdminEntity();
-        SubscriberEntity subscriberEntity = new SubscriberEntity();
+        AdminEntity adminEntity = null;
+        SubscriberEntity subscriberEntity = null;
         if (role.equals(EnumUserType.ADMIN.name().toLowerCase())) {
             adminEntity = adminRepo.findByUser(user);
         } else if (role.equals(EnumUserType.SUBSCRIBER.name().toLowerCase())) {
