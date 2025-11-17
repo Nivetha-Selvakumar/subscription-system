@@ -1,10 +1,7 @@
 package com.subscription.subscription_system.validation;
 
 import com.subscription.subscription_system.entity.*;
-import com.subscription.subscription_system.enumuration.EnumPlanType;
-import com.subscription.subscription_system.enumuration.EnumStatusType;
-import com.subscription.subscription_system.enumuration.EnumSubscriptionStatus;
-import com.subscription.subscription_system.enumuration.EnumUserType;
+import com.subscription.subscription_system.enumuration.*;
 import com.subscription.subscription_system.exception.CommonException;
 import com.subscription.subscription_system.repository.*;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -179,10 +177,12 @@ public class BusinessValidation {
 
     public FeedbackEntity feedbackExist(String feedbackId) throws CommonException {
         return feedbackRepo.findByIdAndStatusNot(feedbackId, EnumStatusType.DELETE)
-                .orElseThrow(() -> new CommonException("Feedback not found or deleted",HttpStatus.NO_CONTENT.value()));
+                .orElseThrow(() -> new CommonException("Feedback not found or deleted", HttpStatus.NO_CONTENT.value()));
     }
 
-    public void validateUserAlreadySubscribed(UserEntity user, SubscriptionPlanEntity plan) throws CommonException {
+    public void validateUserAlreadySubscribed(UserEntity user,
+                                              SubscriptionPlanEntity plan) throws CommonException {
+
         log.info("Checking if user already subscribed to this plan");
 
         Optional<SubscriberEntity> existing =
@@ -193,15 +193,33 @@ public class BusinessValidation {
                 );
 
         if (existing.isPresent()) {
-            throw new CommonException("User already has an active subscription for this plan",
-                    HttpStatus.BAD_REQUEST.value());
+
+            SubscriberEntity sub = existing.get();
+
+            // Convert String → LocalDate
+            LocalDate startDate = LocalDate.parse(sub.getSubStartDate());
+            LocalDate endDate = LocalDate.parse(sub.getSubEndDate());
+            LocalDate today = LocalDate.now();
+
+            // Check if today between start and end
+            boolean isActiveRange =
+                    (!today.isBefore(startDate)) &&
+                            (!today.isAfter(endDate));
+
+            if (isActiveRange) {
+                throw new CommonException(
+                        "User already has an active subscription for this plan",
+                        HttpStatus.BAD_REQUEST.value()
+                );
+            }
         }
     }
+
 
     public SubscriberEntity subscriberExist(UserEntity user, SubscriptionPlanEntity plan) throws CommonException {
         log.info("Validating existing subscription for user {}", user.getId());
 
-        return subscriberRepo.findByUserAndPlanAndStatus(user, plan,EnumStatusType.ACTIVE)
+        return subscriberRepo.findByUserAndPlanAndStatus(user, plan, EnumStatusType.ACTIVE)
                 .orElseThrow(() -> new CommonException("Subscription not found", HttpStatus.BAD_REQUEST.value()));
     }
 
@@ -252,6 +270,7 @@ public class BusinessValidation {
         Query query = new Query();
         query.addCriteria(Criteria.where("user_id").is(user.getId()));
         query.addCriteria(Criteria.where("plan_id").is(plan.getId()));
+        query.addCriteria(Criteria.where("payment_status").is(EnumPaymentStatus.SUCCESS));
         query.with(Sort.by(Sort.Direction.DESC, "created_at"));
         query.limit(1);
 

@@ -4,17 +4,14 @@ import com.subscription.subscription_system.dto.CommonPaginatedResponse;
 import com.subscription.subscription_system.dto.SubscriptionCreateDto;
 import com.subscription.subscription_system.dto.SubscriptionDetailsDto;
 import com.subscription.subscription_system.dto.SubscriptionEditDto;
-import com.subscription.subscription_system.entity.PaymentEntity;
-import com.subscription.subscription_system.entity.SubscriberEntity;
-import com.subscription.subscription_system.entity.SubscriptionPlanEntity;
-import com.subscription.subscription_system.entity.UserEntity;
+import com.subscription.subscription_system.entity.*;
+import com.subscription.subscription_system.enumuration.EnumPaymentStatus;
 import com.subscription.subscription_system.enumuration.EnumStatusType;
 import com.subscription.subscription_system.enumuration.EnumSubscriptionStatus;
+import com.subscription.subscription_system.enumuration.EnumUserType;
 import com.subscription.subscription_system.exception.CommonException;
 import com.subscription.subscription_system.mapper.SubscriptionMapper;
-import com.subscription.subscription_system.repository.PaymentRepo;
-import com.subscription.subscription_system.repository.SubscriberRepo;
-import com.subscription.subscription_system.repository.SubscriptionPlanRepo;
+import com.subscription.subscription_system.repository.*;
 import com.subscription.subscription_system.service.SubscriptionService;
 import com.subscription.subscription_system.utils.QueryUtils;
 import com.subscription.subscription_system.validation.BusinessValidation;
@@ -22,10 +19,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Component
@@ -37,10 +36,13 @@ public class SubscriptionImpl implements SubscriptionService {
     SubscriberRepo subscriberRepo;
 
     @Autowired
-    SubscriptionPlanRepo subscriptionPlanRepo;
+    AdminRepo adminRepo;
 
     @Autowired
     PaymentRepo paymentRepo;
+
+    @Autowired
+    UserRepo userRepo;
 
     @Autowired
     SubscriptionMapper subscriptionMapper;
@@ -63,29 +65,45 @@ public class SubscriptionImpl implements SubscriptionService {
         // 1️⃣ Validate User existence
         UserEntity userEntity = businessValidation.validateUserOrNot(userId);
 
+        // check not a admin
+        Optional<AdminEntity> existingAdmin = adminRepo.findByUserAndStatus(userEntity, EnumStatusType.ACTIVE);
+
+        if (existingAdmin.isPresent()) {
+            throw new CommonException("Admin Cannot subscribe a plan", HttpStatus.BAD_REQUEST.value());
+        }
+
         // 2️⃣ Validate Plan existence
         SubscriptionPlanEntity planEntity = businessValidation.subscriptionPlanExist(planId);
 
         // 3️⃣ Check duplicate active subscription
         businessValidation.validateUserAlreadySubscribed(userEntity, planEntity);
 
-        // 4️⃣ Create Subscriber entry
-        log.info("Mapping subscription to SubscriberEntity");
-        SubscriberEntity subscriber = subscriptionMapper.mapToNewSubscriber(
-                userEntity,
-                planEntity,
-                subscriptionCreateDto
-        );
-        subscriberRepo.save(subscriber);
-
-        // 5️⃣ Store a Payment Entry
+        //  4️⃣Store a Payment Entry
         log.info("Saving Payment details");
+
         PaymentEntity payment = subscriptionMapper.mapToInitialPayment(
                 userEntity,
                 planEntity,
                 subscriptionCreateDto
         );
         paymentRepo.save(payment);
+
+        SubscriberEntity subscriber = null;
+
+        if (subscriptionCreateDto.getPaymentStatus().equalsIgnoreCase(EnumPaymentStatus.SUCCESS.getValue())) {
+            // 5️ Create Subscriber entry
+            log.info("Mapping subscription to SubscriberEntity");
+            subscriber = subscriptionMapper.mapToNewSubscriber(
+                    userEntity,
+                    planEntity,
+                    subscriptionCreateDto
+            );
+            subscriberRepo.save(subscriber);
+
+            userEntity.setRole(EnumUserType.SUBSCRIBER);
+            userEntity.setUpdatedAt(LocalDateTime.now());
+            userRepo.save(userEntity);
+        }
 
         // 6️⃣ Return DTO
         return subscriptionMapper.mapSubscriberToDetailsDto(subscriber, planEntity, payment);
@@ -102,9 +120,15 @@ public class SubscriptionImpl implements SubscriptionService {
     ) throws CommonException {
 
         log.info("Renew Subscription API invoked by userId: {}", userId);
-
-        // 1️⃣ Validate User
+        // 1️⃣ Validate User existence
         UserEntity userEntity = businessValidation.validateUserOrNot(userId);
+
+        // check not a admin
+        Optional<AdminEntity> existingAdmin = adminRepo.findByUserAndStatus(userEntity, EnumStatusType.ACTIVE);
+
+        if (existingAdmin.isPresent()) {
+            throw new CommonException("Admin Cannot subscribe a plan", HttpStatus.BAD_REQUEST.value());
+        }
 
         // 2️⃣ Validate Plan
         SubscriptionPlanEntity planEntity = businessValidation.subscriptionPlanExist(planId);
@@ -119,8 +143,7 @@ public class SubscriptionImpl implements SubscriptionService {
         log.info("Updating Subscriber renewal details...");
         subscriptionMapper.mapRenewalToSubscriber(
                 subscriberEntity,
-                planEntity,
-                subscriptionEditDto
+                planEntity
         );
         subscriberRepo.save(subscriberEntity);
 
@@ -147,6 +170,13 @@ public class SubscriptionImpl implements SubscriptionService {
         // 1️⃣ Validate User
         UserEntity userEntity = businessValidation.validateUserOrNot(userId);
 
+        // check not a admin
+        Optional<AdminEntity> existingAdmin = adminRepo.findByUserAndStatus(userEntity, EnumStatusType.ACTIVE);
+
+        if (existingAdmin.isPresent()) {
+            throw new CommonException("Admin Cannot subscribe a plan", HttpStatus.BAD_REQUEST.value());
+        }
+
         // 2️⃣ Validate Plan
         SubscriptionPlanEntity planEntity = businessValidation.subscriptionPlanExist(planId);
 
@@ -164,6 +194,10 @@ public class SubscriptionImpl implements SubscriptionService {
 
         subscriberRepo.save(subscriber);
 
+        userEntity.setRole(EnumUserType.USER);
+        userEntity.setUpdatedAt(LocalDateTime.now());
+        userRepo.save(userEntity);
+
         return subscriptionMapper.mapSubscriberToBasicDto(subscriber, planEntity);
     }
 
@@ -178,11 +212,15 @@ public class SubscriptionImpl implements SubscriptionService {
         // 1️⃣ Validate User
         UserEntity userEntity = businessValidation.validateUserOrNot(userId);
 
+        Optional<AdminEntity> existingAdmin = adminRepo.findByUserAndStatus(userEntity, EnumStatusType.ACTIVE);
+
         // 2️⃣ Validate Subscription Exists
         SubscriberEntity subscriber = businessValidation.subscriptionExistById(subscriptionId);
 
         // 3️⃣ Validate Ownership
-        businessValidation.validateSubscriptionBelongsToUser(userEntity, subscriber);
+        if (existingAdmin.isEmpty()) {
+            businessValidation.validateSubscriptionBelongsToUser(userEntity, subscriber);
+        }
 
         // 4️⃣ Get Plan
         SubscriptionPlanEntity plan = subscriber.getPlan();
@@ -210,32 +248,48 @@ public class SubscriptionImpl implements SubscriptionService {
 
         log.info("Fetching Subscription payment list... userId={}", userId);
 
-        // 1️⃣ Validate User
         UserEntity userEntity = businessValidation.validateUserOrNot(userId);
 
-        // 2️⃣ Build Query with user scope
+        Optional<AdminEntity> existingAdmin =
+                adminRepo.findByUserAndStatus(userEntity, EnumStatusType.ACTIVE);
+
+        String effectiveUserId = existingAdmin.isPresent() ? null : userId;
+
         Query query = QueryUtils.buildSubscriptionQuery(
-                userId,
+                effectiveUserId,
                 search,
                 filterBy,
                 sortBy,
                 sortDir
         );
 
-        // Total count
         long total = mongoTemplate.count(query, PaymentEntity.class);
 
-        // Pagination
         query.skip(offset).limit(limit);
 
         List<PaymentEntity> payments = mongoTemplate.find(query, PaymentEntity.class);
 
+        // ⭐ NEW: Fetch subscriber entity also
         List<SubscriptionDetailsDto> dtoList = payments.stream()
-                .map(payment -> subscriptionMapper.mapPaymentToSubscriptionDto(payment))
+                .map(payment -> {
+
+                    SubscriberEntity subscriber =
+                            subscriberRepo.findByUserAndPlanAndStatus(
+                                    payment.getUser(),
+                                    payment.getPlan(),
+                                    EnumStatusType.ACTIVE
+                            ).orElse(null);
+
+                    return subscriptionMapper.mapPaymentListDto(
+                            payment,
+                            subscriber
+                    );
+                })
                 .toList();
 
         return new CommonPaginatedResponse<>(dtoList, total);
     }
+
 
 
 }
