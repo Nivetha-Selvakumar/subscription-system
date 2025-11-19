@@ -19,4 +19,6 @@ public interface UserService{
     UserEntity createUser(UserCreateRequestDto userCreateDto, String userId) throws CommonException;
 
     UserDetailsDto getUserDetails(String userId, String targetUserId) throws CommonException;
+
+    UserDashboardDto getUserDashboard(String userId) throws CommonException;
 }

@@ -8,6 +8,8 @@ import com.subscription.subscription_system.enumuration.EnumSubscriptionStatus;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -19,4 +21,16 @@ public interface SubscriberRepo extends MongoRepository<SubscriberEntity, String
     Optional<SubscriberEntity> findByUserAndPlanAndCurrentSubStatus(UserEntity user, SubscriptionPlanEntity plan, EnumSubscriptionStatus enumSubscriptionStatus);
 
     Optional<SubscriberEntity> findByUserAndPlanAndStatus(UserEntity user, SubscriptionPlanEntity plan, EnumStatusType enumStatusType);
+
+    long countByCurrentSubStatus(EnumSubscriptionStatus enumSubscriptionStatus);
+
+    List<SubscriberEntity> findTop5ByOrderByCreatedAtDesc();
+
+    List<SubscriberEntity> findAllByCurrentSubStatusNotInAndSubStartDateBetween(List<EnumSubscriptionStatus> excludedStatus, LocalDateTime start, LocalDateTime today);
+
+    SubscriberEntity findTopByUserIdAndCurrentSubStatusOrderByCreatedAtDesc(String userId, EnumSubscriptionStatus enumSubscriptionStatus);
+
+    List<SubscriberEntity> findTop5ByUserIdOrderByCreatedAtDesc(String userId);
+
+    SubscriberEntity findTopByUserOrderByCreatedAtDesc(UserEntity user);
 }
