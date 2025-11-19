@@ -1,20 +1,11 @@
 package com.subscription.subscription_system.service.impl;
 
 import com.subscription.subscription_system.dto.*;
-import com.subscription.subscription_system.entity.AdminEntity;
-import com.subscription.subscription_system.entity.AuthTokenEntity;
-import com.subscription.subscription_system.entity.SubscriberEntity;
-import com.subscription.subscription_system.entity.UserEntity;
-import com.subscription.subscription_system.enumuration.EnumSexType;
-import com.subscription.subscription_system.enumuration.EnumStatusType;
-import com.subscription.subscription_system.enumuration.EnumSubscriptionStatus;
-import com.subscription.subscription_system.enumuration.EnumUserType;
+import com.subscription.subscription_system.entity.*;
+import com.subscription.subscription_system.enumuration.*;
 import com.subscription.subscription_system.exception.CommonException;
 import com.subscription.subscription_system.mapper.UserMapper;
-import com.subscription.subscription_system.repository.AdminRepo;
-import com.subscription.subscription_system.repository.AuthTokenRepo;
-import com.subscription.subscription_system.repository.SubscriberRepo;
-import com.subscription.subscription_system.repository.UserRepo;
+import com.subscription.subscription_system.repository.*;
 import com.subscription.subscription_system.service.UserService;
 import com.subscription.subscription_system.utils.DateTimeUtils;
 import com.subscription.subscription_system.utils.JwtUtils;
@@ -62,6 +53,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     MongoTemplate mongoTemplate;
+
+    @Autowired
+    PaymentRepo paymentRepo;
 
     @Override
     public AuthTokenEntity signUpUser(SignupRequestDto userCreateDto) throws CommonException {
@@ -183,9 +177,8 @@ public class UserServiceImpl implements UserService {
         if (editDto.getStatus() != null) targetUser.setStatus(EnumStatusType.fromValue(editDto.getStatus()));
 
         targetUser.setUpdatedAt(LocalDateTime.now());
-        targetUser.setUpdatedBy(requester.getFirstName()+ " " + requester.getLastName());
+        targetUser.setUpdatedBy(requester.getFirstName() + " " + requester.getLastName());
 
-        userRepo.save(targetUser); // save user part first
 
         // 4️⃣ Role-based additional updates
         String role = targetUser.getRole().getValue().toLowerCase();
@@ -198,7 +191,7 @@ public class UserServiceImpl implements UserService {
             targetUser.setRole(EnumUserType.valueOf(editDto.getRole()));
         }
 
-
+        userRepo.save(targetUser); // save user part first
         switch (role) {
             case "admin":
                 adminEntity = adminRepo.findByUser(targetUser);
@@ -366,4 +359,90 @@ public class UserServiceImpl implements UserService {
 
         return userEntity;
     }
+
+    @Override
+    public UserDashboardDto getUserDashboard(String userId) throws CommonException {
+
+        // ✔ 1. Validate User
+        UserEntity user = businessValidation.validateUserOrNot(userId);
+
+        // 1️⃣ Active Subscription
+        SubscriberEntity activeSub = subscriberRepo
+                .findTopByUserOrderByCreatedAtDesc(user);
+
+
+        String activePlan = (activeSub != null)
+                ? activeSub.getPlan().getPlanName()
+                : "No Active Plan";
+
+        String nextBillingDate = (activeSub != null)
+                ? activeSub.getSubEndDate()
+                : "-";
+
+
+        // ✔ 3. Total Spent
+        double totalSpent = getTotalSpent(userId);
+
+
+        // ✔ 4. Recent Subscriptions
+        List<UserRecentSubscriptionDto> recentSubscriptions =
+                getRecentSubscriptions(userId);
+
+
+        // ✔ 5. Upcoming Payment
+        UserUpcomingPaymentDto upcomingPayment =
+                getUpcomingPayment(user);
+
+
+        // ✔ FINAL RETURN — like Admin
+        return new UserDashboardDto(
+                activePlan,
+                nextBillingDate,
+                totalSpent,
+                recentSubscriptions,
+                upcomingPayment
+        );
+    }
+
+    private double getTotalSpent(String userId) {
+
+        List<PaymentEntity> payments =
+                paymentRepo.findByUserIdAndPaymentStatus(userId, EnumPaymentStatus.SUCCESS);
+
+        return payments.stream()
+                .mapToDouble(PaymentEntity::getAmount)
+                .sum();
+    }
+
+    private List<UserRecentSubscriptionDto> getRecentSubscriptions(String userId) {
+
+        List<SubscriberEntity> subs =
+                subscriberRepo.findTop5ByUserIdOrderByCreatedAtDesc(userId);
+
+        return subs.stream()
+                .map(s -> new UserRecentSubscriptionDto(
+                        s.getPlan().getPlanName(),
+                        s.getPlan().getCost(),
+                        s.getPlan().getPlanType().toString(),
+                        s.getCurrentSubStatus().name()
+                )).toList();
+    }
+
+
+    private UserUpcomingPaymentDto getUpcomingPayment(UserEntity user) {
+
+        // Find latest subscription
+        SubscriberEntity sub = subscriberRepo.findTopByUserOrderByCreatedAtDesc(user);
+
+        if (sub == null) return null;
+
+        // Next billing = subscription end date
+        return new UserUpcomingPaymentDto(
+                sub.getPlan().getCost(),
+                sub.getSubEndDate()
+        );
+    }
+
+
+
 }

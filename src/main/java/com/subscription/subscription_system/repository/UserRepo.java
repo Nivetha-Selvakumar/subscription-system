@@ -2,6 +2,7 @@ package com.subscription.subscription_system.repository;
 
 import com.subscription.subscription_system.entity.UserEntity;
 import com.subscription.subscription_system.enumuration.EnumStatusType;
+import com.subscription.subscription_system.enumuration.EnumUserType;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
@@ -17,4 +18,8 @@ public interface UserRepo extends MongoRepository<UserEntity, String> {
     Optional<UserEntity> findByIdAndStatus(String userId, EnumStatusType enumStatusType);
 
     UserEntity findByEmailAndStatus(String email, EnumStatusType enumStatusType);
+
+    List<UserEntity> findAllByStatusNotAndRoleNot(EnumStatusType enumStatusType, EnumUserType enumUserType);
+
+    long countByStatusNotAndRoleNot(EnumStatusType enumStatusType, EnumUserType enumUserType);
 }

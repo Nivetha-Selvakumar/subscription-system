@@ -120,4 +120,22 @@ public class UserController {
         UserCreateResponseDto response = new UserCreateResponseDto("User created successfully", HttpStatus.CREATED.value(), user);
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/user/dashboard")
+    public ResponseEntity<CommonResponseDto> getUserDashboard(
+            @RequestHeader("User-Id") String userId) throws CommonException {
+
+        log.info("User Dashboard API called");
+
+        UserDashboardDto dto = userService.getUserDashboard(userId);
+
+        CommonResponseDto response = new CommonResponseDto(
+                "User Dashboard Fetched Successfully",
+                HttpStatus.OK.value(),
+                dto
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
 }

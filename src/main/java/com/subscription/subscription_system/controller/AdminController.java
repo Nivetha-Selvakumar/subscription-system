@@ -2,6 +2,8 @@ package com.subscription.subscription_system.controller;
 
 import com.subscription.subscription_system.dto.AdminCreateRequestDto;
 import com.subscription.subscription_system.dto.AdminCreateResponseDto;
+import com.subscription.subscription_system.dto.AdminDashboardRequestDto;
+import com.subscription.subscription_system.dto.CommonResponseDto;
 import com.subscription.subscription_system.entity.AdminEntity;
 import com.subscription.subscription_system.exception.CommonException;
 import com.subscription.subscription_system.service.AdminService;
@@ -10,10 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @Slf4j
@@ -38,4 +37,14 @@ public class AdminController {
         AdminCreateResponseDto response = new AdminCreateResponseDto( "Admin created successfully", HttpStatus.CREATED.value(), admin);
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/admin/dashboard")
+    public ResponseEntity<CommonResponseDto> getAdminDashboard(@RequestHeader("User-Id") String userId) throws CommonException {
+        log.info("Admin Dashboard api called");
+        AdminDashboardRequestDto adminDashboardRequestDto = adminService.getAdminDashboard(userId);
+        CommonResponseDto response = new CommonResponseDto("Admin Dashboard List fetched successfully", HttpStatus.OK.value(), adminDashboardRequestDto);
+        return ResponseEntity.ok(response);
+
+    }
+
 }
