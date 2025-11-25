@@ -14,6 +14,7 @@ import com.subscription.subscription_system.validation.BusinessValidation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -56,6 +57,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     PaymentRepo paymentRepo;
+
+    @Autowired
+    SubscriptionPlanRepo planRepo;
 
     @Override
     public AuthTokenEntity signUpUser(SignupRequestDto userCreateDto) throws CommonException {
@@ -125,9 +129,26 @@ public class UserServiceImpl implements UserService {
         // 5️⃣ Fetch paginated users
         List<UserEntity> users = mongoTemplate.find(query, UserEntity.class);
 
-        // 6️⃣ Preload Admins & Subscribers
-        List<AdminEntity> admins = mongoTemplate.findAll(AdminEntity.class);
-        List<SubscriberEntity> subscribers = mongoTemplate.findAll(SubscriberEntity.class);
+        // 6️⃣ Preload Admins & Subscribers (excluding DELETE)
+        Query activeQuery = new Query();
+        activeQuery.addCriteria(Criteria.where("status").ne(EnumStatusType.DELETE));
+
+        // Admin Records
+        List<AdminEntity> admins = mongoTemplate.find(activeQuery, AdminEntity.class);
+
+        Query subscriberQuery = new Query();
+
+        subscriberQuery.addCriteria(
+                Criteria.where("status").ne(EnumStatusType.DELETE)
+        );
+
+        subscriberQuery.addCriteria(
+                Criteria.where("current_sub_status")
+                        .nin(EnumSubscriptionStatus.EXPIRED, EnumSubscriptionStatus.CANCELLED)
+        );
+
+        // Subscriber Records
+        List<SubscriberEntity> subscribers = mongoTemplate.find(subscriberQuery, SubscriberEntity.class);
 
         Map<String, AdminEntity> adminMap = admins.stream()
                 .filter(a -> a.getUser() != null)
@@ -180,50 +201,85 @@ public class UserServiceImpl implements UserService {
         targetUser.setUpdatedBy(requester.getFirstName() + " " + requester.getLastName());
 
 
-        // 4️⃣ Role-based additional updates
-        String role = targetUser.getRole().getValue().toLowerCase();
-
         AdminEntity adminEntity = null;
         SubscriberEntity subscriberEntity = null;
 
-        if (requester.getRole().equals(EnumUserType.ADMIN) && !Objects.equals(requester.getId(), targetUser.getId())
+        // 4️⃣ Handle role change only if requester is Admin and editing someone else
+        if (requester.getRole().equals(EnumUserType.ADMIN)
+                && !Objects.equals(requester.getId(), targetUser.getId())
                 && editDto.getRole() != null) {
+
+            String oldRole = targetUser.getRole().getValue().toLowerCase();
+            String newRole = editDto.getRole().toLowerCase();
+
+            // Update the main user table role
             targetUser.setRole(EnumUserType.valueOf(editDto.getRole()));
+
+            // 4A️⃣ If ADMIN → USER ➝ Remove Admin entity
+            if (oldRole.equals("admin") && newRole.equals("user")) {
+
+                AdminEntity adminRecord = adminRepo.findByUser(targetUser);
+
+                if (adminRecord != null) {
+                    adminRecord.setStatus(EnumStatusType.DELETE);
+                    adminRecord.setUpdatedAt(LocalDateTime.now());
+                    adminRecord.setUpdatedBy(requester.getFirstName() + " " + requester.getLastName());
+
+                    adminRepo.save(adminRecord);
+                }
+            }
+
+            // 4B️⃣ Prevent converting subscriber internally from backend
+            if (oldRole.equals("subscriber") && !newRole.equals("subscriber")) {
+                throw new CommonException("Subscriber cannot be converted to another role",
+                        HttpStatus.BAD_REQUEST.value());
+            }
+
+            if (!oldRole.equals("subscriber") && newRole.equals("subscriber")) {
+                throw new CommonException("Cannot convert User/Admin to Subscriber",
+                        HttpStatus.BAD_REQUEST.value());
+            }
+
+            // 5⃣ Role-based additional updates
+            String role = targetUser.getRole().getValue().toLowerCase();
+            switch (role) {
+                case "admin":
+                    adminEntity = adminRepo.findByUser(targetUser);
+                    if (adminEntity == null) {
+                        adminEntity = new AdminEntity();
+                        adminEntity.setUser(targetUser);
+                    }
+                    adminEntity.setSalary(editDto.getSalary());
+                    adminEntity.setUpdatedAt(LocalDateTime.now());
+                    adminEntity.setUpdatedBy(requester.getFirstName() + " " + requester.getLastName());
+                    adminRepo.save(adminEntity);
+                    break;
+
+                case "subscriber":
+                    subscriberEntity = subscriberRepo.findByUser(targetUser);
+                    if (subscriberEntity == null) {
+                        subscriberEntity = new SubscriberEntity();
+                        subscriberEntity.setUser(targetUser);
+                    }
+                    subscriberEntity.setCurrentSubStatus(EnumSubscriptionStatus.fromValue(editDto.getCurrentSubStatus()));
+                    subscriberEntity.setSubStartDate(editDto.getSubStartDate());
+                    subscriberEntity.setSubEndDate(editDto.getSubEndDate());
+                    subscriberEntity.setJoinDate(editDto.getJoinDate());
+                    subscriberEntity.setUpdatedAt(LocalDateTime.now());
+                    subscriberEntity.setUpdatedBy(requester.getFirstName() + " " + requester.getLastName());
+                    subscriberRepo.save(subscriberEntity);
+                    break;
+
+                default:
+                    // USER has only UserEntity fields
+                    break;
+            }
+
         }
+
 
         userRepo.save(targetUser); // save user part first
-        switch (role) {
-            case "admin":
-                adminEntity = adminRepo.findByUser(targetUser);
-                if (adminEntity == null) {
-                    adminEntity = new AdminEntity();
-                    adminEntity.setUser(targetUser);
-                }
-                adminEntity.setSalary(editDto.getSalary());
-                adminEntity.setUpdatedAt(LocalDateTime.now());
-                adminEntity.setUpdatedBy(requester.getFirstName() + " " + requester.getLastName());
-                adminRepo.save(adminEntity);
-                break;
 
-            case "subscriber":
-                subscriberEntity = subscriberRepo.findByUser(targetUser);
-                if (subscriberEntity == null) {
-                    subscriberEntity = new SubscriberEntity();
-                    subscriberEntity.setUser(targetUser);
-                }
-                subscriberEntity.setCurrentSubStatus(EnumSubscriptionStatus.fromValue(editDto.getCurrentSubStatus()));
-                subscriberEntity.setSubStartDate(editDto.getSubStartDate());
-                subscriberEntity.setSubEndDate(editDto.getSubEndDate());
-                subscriberEntity.setJoinDate(editDto.getJoinDate());
-                subscriberEntity.setUpdatedAt(LocalDateTime.now());
-                subscriberEntity.setUpdatedBy(requester.getFirstName() + " " + requester.getLastName());
-                subscriberRepo.save(subscriberEntity);
-                break;
-
-            default:
-                // USER has only UserEntity fields
-                break;
-        }
 
         // 5️⃣ Return response DTO
         return userMapper.mapUserDetails(targetUser, adminEntity, subscriberEntity);
@@ -442,7 +498,6 @@ public class UserServiceImpl implements UserService {
                 sub.getSubEndDate()
         );
     }
-
 
 
 }

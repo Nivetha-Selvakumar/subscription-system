@@ -15,4 +15,6 @@ public interface SubscriptionService {
     SubscriptionDetailsDto getSubscriptionDetails(String userId, String targetSubscriptionId) throws CommonException;
 
     CommonPaginatedResponse<SubscriptionDetailsDto> getSubscriptionPaymentList(String userId, String search, String filterBy, String sortBy, String sortDir, int offset, int limit) throws CommonException;
+
+    ExpiredResultDto expireSubscriptions() throws CommonException;
 }

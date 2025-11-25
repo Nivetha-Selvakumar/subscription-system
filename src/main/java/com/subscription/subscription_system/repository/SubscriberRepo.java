@@ -26,11 +26,11 @@ public interface SubscriberRepo extends MongoRepository<SubscriberEntity, String
 
     List<SubscriberEntity> findTop5ByOrderByCreatedAtDesc();
 
-    List<SubscriberEntity> findAllByCurrentSubStatusNotInAndSubStartDateBetween(List<EnumSubscriptionStatus> excludedStatus, LocalDateTime start, LocalDateTime today);
-
-    SubscriberEntity findTopByUserIdAndCurrentSubStatusOrderByCreatedAtDesc(String userId, EnumSubscriptionStatus enumSubscriptionStatus);
+    List<SubscriberEntity> findAllByCurrentSubStatusNotInAndSubStartDateBetween(List<EnumSubscriptionStatus> excludedStatus, String start, String today);
 
     List<SubscriberEntity> findTop5ByUserIdOrderByCreatedAtDesc(String userId);
 
     SubscriberEntity findTopByUserOrderByCreatedAtDesc(UserEntity user);
+
+    List<SubscriberEntity> findByStatusNot(EnumStatusType enumStatusType);
 }

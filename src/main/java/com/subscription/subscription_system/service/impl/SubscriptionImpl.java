@@ -1,9 +1,6 @@
 package com.subscription.subscription_system.service.impl;
 
-import com.subscription.subscription_system.dto.CommonPaginatedResponse;
-import com.subscription.subscription_system.dto.SubscriptionCreateDto;
-import com.subscription.subscription_system.dto.SubscriptionDetailsDto;
-import com.subscription.subscription_system.dto.SubscriptionEditDto;
+import com.subscription.subscription_system.dto.*;
 import com.subscription.subscription_system.entity.*;
 import com.subscription.subscription_system.enumuration.EnumPaymentStatus;
 import com.subscription.subscription_system.enumuration.EnumStatusType;
@@ -22,7 +19,9 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -290,6 +289,58 @@ public class SubscriptionImpl implements SubscriptionService {
         return new CommonPaginatedResponse<>(dtoList, total);
     }
 
+    public ExpiredResultDto expireSubscriptions() {
 
+        LocalDate today = LocalDate.now();
+
+        // Fetch only NOT-DELETE subscribers
+        List<SubscriberEntity> subscribers = subscriberRepo.findByStatusNot(EnumStatusType.DELETE);
+
+        int successCount = 0;
+        List<String> failedUsers = new ArrayList<>();
+
+        for (SubscriberEntity sub : subscribers) {
+            try {
+
+                // Missing date → skip this user
+                if (sub.getSubEndDate() == null) {
+                    failedUsers.add(sub.getUser().getId() + " - SubEndDate missing");
+                    continue;
+                }
+
+                EnumSubscriptionStatus currentStatus = sub.getCurrentSubStatus();
+
+                // Only ACTIVE or PENDING should be processed
+                if (currentStatus != EnumSubscriptionStatus.ACTIVE &&
+                        currentStatus != EnumSubscriptionStatus.PENDING) {
+                    continue;
+                }
+
+                LocalDate endDate = LocalDate.parse(sub.getSubEndDate());
+
+                if (endDate.isBefore(today)) {
+
+                    // Expire subscription
+                    sub.setCurrentSubStatus(EnumSubscriptionStatus.EXPIRED);
+                    sub.setStatus(EnumStatusType.INACTIVE);
+                    sub.setUpdatedAt(LocalDateTime.now());
+                    sub.setUpdatedBy("System Auto-Cron");
+
+                    subscriberRepo.save(sub);
+                    successCount++;
+                }
+
+            } catch (Exception ex) {
+
+                String userId = (sub.getUser() != null) ? sub.getUser().getId() : "UNKNOWN";
+
+                failedUsers.add(userId + " - " + ex.getMessage());
+
+                log.error("Cron Expiry Error on user {} : {}", userId, ex.getMessage());
+            }
+        }
+
+        return new ExpiredResultDto(successCount, failedUsers);
+    }
 
 }

@@ -38,9 +38,9 @@ public class SubscriptionController {
 
     @PutMapping("/update/subscription")
     public ResponseEntity<CommonResponseDto> updateSubscription( //renew subscritpion
-            @RequestHeader("User-Id") String userId,
-            @RequestParam("planId") String planId,
-            @RequestBody SubscriptionEditDto subscriptionEditDto) throws CommonException {
+                                                                 @RequestHeader("User-Id") String userId,
+                                                                 @RequestParam("planId") String planId,
+                                                                 @RequestBody SubscriptionEditDto subscriptionEditDto) throws CommonException {
         log.info("Basic Validation for Edit Renew subscription");
         subscriptionValidator.validateSubscriptionEdit(userId, planId, subscriptionEditDto);
 
@@ -55,7 +55,7 @@ public class SubscriptionController {
     public ResponseEntity<CommonResponseDto> cancelSubscription( //renew subscritpion
                                                                  @RequestHeader("User-Id") String userId,
                                                                  @RequestParam("planId") String planId
-                                                                 ) throws CommonException {
+    ) throws CommonException {
         log.info("Basic Validation for Cancel subscription");
         subscriptionValidator.validateSubscriptionCancel(userId, planId);
 
@@ -76,7 +76,7 @@ public class SubscriptionController {
             throw new CommonException("UserId or PlanId is invalid", HttpStatus.BAD_REQUEST.value());
         }
 
-        SubscriptionDetailsDto subscriptionDetailsDto  = subscriptionService.getSubscriptionDetails(userId, targetSubscriptionId);
+        SubscriptionDetailsDto subscriptionDetailsDto = subscriptionService.getSubscriptionDetails(userId, targetSubscriptionId);
         CommonResponseDto response = new CommonResponseDto("Subscription details fetched successfully", HttpStatus.OK.value(), subscriptionDetailsDto);
 
         return ResponseEntity.ok(response);
@@ -84,13 +84,13 @@ public class SubscriptionController {
 
     @GetMapping("/get/subscriptionPaymentList")
     public ResponseEntity<CommonResponseDto> getSubscriptionPaymentList(@RequestHeader("User-Id") String userId,
-                                                         @RequestParam(required = false) String search,
-                                                         @RequestParam(required = false) String filterBy,  // format: key:value,key:value
-                                                         @RequestParam(required = false, defaultValue = "createdAt") String sortBy,
-                                                         @RequestParam(required = false, defaultValue = "asc") String sortDir,
-                                                         @RequestParam(required = false, defaultValue = "0") int offset,
+                                                                        @RequestParam(required = false) String search,
+                                                                        @RequestParam(required = false) String filterBy,  // format: key:value,key:value
+                                                                        @RequestParam(required = false, defaultValue = "createdAt") String sortBy,
+                                                                        @RequestParam(required = false, defaultValue = "asc") String sortDir,
+                                                                        @RequestParam(required = false, defaultValue = "0") int offset,
 
-                                                         @RequestParam(required = false, defaultValue = "10") int limit) throws CommonException {
+                                                                        @RequestParam(required = false, defaultValue = "10") int limit) throws CommonException {
         log.info("Basic validation for getting Subscription List");
         if (userId == null) {
             throw new CommonException("UserId is invalid", HttpStatus.BAD_REQUEST.value());
@@ -104,4 +104,18 @@ public class SubscriptionController {
         return ResponseEntity.ok(response);
 
     }
+
+    // Run manually OR via Cron
+    @GetMapping("/plan/expires")
+    public ResponseEntity<CommonResponseDto> expirePlansCron() throws CommonException {
+        log.info("Checking expired subscription plans...");
+
+        ExpiredResultDto expiredCount = subscriptionService.expireSubscriptions();
+
+        CommonResponseDto response =
+                new CommonResponseDto("Expired plans updated", HttpStatus.OK.value(), expiredCount);
+
+        return ResponseEntity.ok(response);
+    }
+
 }

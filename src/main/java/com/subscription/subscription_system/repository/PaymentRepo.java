@@ -11,7 +11,7 @@ import java.util.List;
 @Repository
 public interface PaymentRepo extends MongoRepository<PaymentEntity, String> {
 
-    long countByPaymentStatusAndPaymentDateBetween(EnumPaymentStatus enumPaymentStatus, String startDate, String endDate);
+    List<PaymentEntity> countByPaymentStatusAndPaymentDateBetween(EnumPaymentStatus enumPaymentStatus, String startDate, String endDate);
 
     List<PaymentEntity> findTop5ByOrderByCreatedAtDesc();
 

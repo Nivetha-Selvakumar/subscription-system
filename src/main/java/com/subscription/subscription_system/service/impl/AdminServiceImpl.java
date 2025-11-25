@@ -96,7 +96,12 @@ public class AdminServiceImpl implements AdminService {
         LocalDate today = LocalDate.now();
         LocalDate startDate = LocalDate.now().withDayOfMonth(1);
 
-        long revenue = paymentRepo.countByPaymentStatusAndPaymentDateBetween(EnumPaymentStatus.SUCCESS, startDate.toString(), today.toString());
+        List<PaymentEntity> revenueData = paymentRepo.countByPaymentStatusAndPaymentDateBetween(EnumPaymentStatus.SUCCESS, startDate.toString(), today.toString());
+
+        double revenue = revenueData.stream()
+                .mapToDouble(PaymentEntity::getAmount)
+                .sum();
+
 
         List<EnumTicketStatus> pendingStatus = List.of(
                 EnumTicketStatus.OPEN,
@@ -120,6 +125,8 @@ public class AdminServiceImpl implements AdminService {
         LocalDateTime start = firstMonth.atStartOfDay();
         LocalDateTime today = LocalDateTime.now();
 
+        String startDate = start.toLocalDate().toString();
+        String endDate = today.toLocalDate().toString();
         // Exclude cancelled/expired
         List<EnumSubscriptionStatus> excludedStatus = List.of(
                 EnumSubscriptionStatus.CANCELLED,
@@ -130,8 +137,8 @@ public class AdminServiceImpl implements AdminService {
         List<SubscriberEntity> subs = subscriberRepo
                 .findAllByCurrentSubStatusNotInAndSubStartDateBetween(
                         excludedStatus,
-                        start,
-                        today
+                        startDate,
+                        endDate
                 );
 
         // Prepare chart bucket
