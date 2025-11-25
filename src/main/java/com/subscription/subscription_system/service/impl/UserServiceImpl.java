@@ -104,9 +104,10 @@ public class UserServiceImpl implements UserService {
         AdminEntity adminEntity = null;
         SubscriberEntity subscriberEntity = null;
         if (role.equals(EnumUserType.ADMIN.name().toLowerCase())) {
-            adminEntity = adminRepo.findByUser(user);
+            adminEntity = adminRepo.findByUserAndStatusNot(user,EnumStatusType.DELETE);
         } else if (role.equals(EnumUserType.SUBSCRIBER.name().toLowerCase())) {
-            subscriberEntity = subscriberRepo.findByUser(user);
+            List<EnumSubscriptionStatus> subStatus = List.of(EnumSubscriptionStatus.CANCELLED,EnumSubscriptionStatus.EXPIRED);
+            subscriberEntity = subscriberRepo.findByUserAndStatusNotAndCurrentSubStatusNotIn(user,EnumStatusType.DELETE,subStatus);
         }
 
         return userMapper.mapUserDetails(user, adminEntity, subscriberEntity);
@@ -472,15 +473,15 @@ public class UserServiceImpl implements UserService {
 
     private List<UserRecentSubscriptionDto> getRecentSubscriptions(String userId) {
 
-        List<SubscriberEntity> subs =
-                subscriberRepo.findTop5ByUserIdOrderByCreatedAtDesc(userId);
+        List<PaymentEntity> subs =
+                paymentRepo.findTop5ByUserIdOrderByCreatedAtDesc(userId);
 
         return subs.stream()
                 .map(s -> new UserRecentSubscriptionDto(
                         s.getPlan().getPlanName(),
                         s.getPlan().getCost(),
                         s.getPlan().getPlanType().toString(),
-                        s.getCurrentSubStatus().name()
+                        s.getPaymentStatus().getValue()
                 )).toList();
     }
 

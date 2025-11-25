@@ -322,7 +322,7 @@ public class SubscriptionImpl implements SubscriptionService {
 
                     // Expire subscription
                     sub.setCurrentSubStatus(EnumSubscriptionStatus.EXPIRED);
-                    sub.setStatus(EnumStatusType.INACTIVE);
+                    sub.setStatus(EnumStatusType.DELETE);
                     sub.setUpdatedAt(LocalDateTime.now());
                     sub.setUpdatedBy("System Auto-Cron");
 

@@ -93,7 +93,7 @@ public class AdminServiceImpl implements AdminService {
 
         long activeSubscriptions = subscriberRepo.countByCurrentSubStatus(EnumSubscriptionStatus.ACTIVE);
 
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now().plusDays(1);
         LocalDate startDate = LocalDate.now().withDayOfMonth(1);
 
         List<PaymentEntity> revenueData = paymentRepo.countByPaymentStatusAndPaymentDateBetween(EnumPaymentStatus.SUCCESS, startDate.toString(), today.toString());
@@ -123,7 +123,7 @@ public class AdminServiceImpl implements AdminService {
         // Last 6 months start
         LocalDate firstMonth = LocalDate.now().minusMonths(5).withDayOfMonth(1);
         LocalDateTime start = firstMonth.atStartOfDay();
-        LocalDateTime today = LocalDateTime.now();
+        LocalDateTime today = LocalDateTime.now().plusDays(1);
 
         String startDate = start.toLocalDate().toString();
         String endDate = today.toLocalDate().toString();

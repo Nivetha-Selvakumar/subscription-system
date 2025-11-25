@@ -30,4 +30,5 @@ public class UserDetailsDto {
     private String subStartDate;
     private String subEndDate;
     private String joinDate;
+    private Object plan;
 }

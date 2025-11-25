@@ -18,4 +18,6 @@ public interface PaymentRepo extends MongoRepository<PaymentEntity, String> {
     List<PaymentEntity> findByUserIdAndPaymentStatus(String userId, EnumPaymentStatus enumPaymentStatus);
 
     PaymentEntity findTopByUserAndPaymentStatusOrderByCreatedAtAsc(UserEntity user, EnumPaymentStatus enumPaymentStatus);
+
+    List<PaymentEntity> findTop5ByUserIdOrderByCreatedAtDesc(String userId);
 }

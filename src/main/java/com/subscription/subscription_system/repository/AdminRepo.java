@@ -13,4 +13,6 @@ public interface AdminRepo extends MongoRepository<AdminEntity, String> {
     AdminEntity findByUser(UserEntity user);
 
     Optional<AdminEntity> findByUserAndStatus(UserEntity userEntity, EnumStatusType enumStatusType);
+
+    AdminEntity findByUserAndStatusNot(UserEntity user, EnumStatusType enumStatusType);
 }
