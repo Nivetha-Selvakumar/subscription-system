@@ -92,11 +92,13 @@ public class UserMapper {
             userDetailsDto.setSubStartDate(subscriberEntity.getSubStartDate());
             userDetailsDto.setSubEndDate(subscriberEntity.getSubEndDate());
             userDetailsDto.setJoinDate(subscriberEntity.getJoinDate());
+            userDetailsDto.setPlan(subscriberEntity.getPlan());
         } else {
             userDetailsDto.setCurrentSubStatus(null);
             userDetailsDto.setSubStartDate(null);
             userDetailsDto.setSubEndDate(null);
             userDetailsDto.setJoinDate(null);
+            userDetailsDto.setPlan(null);
         }
 
         return userDetailsDto;

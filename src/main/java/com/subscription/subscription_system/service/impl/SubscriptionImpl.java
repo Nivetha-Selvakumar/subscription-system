@@ -21,6 +21,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -48,6 +49,9 @@ public class SubscriptionImpl implements SubscriptionService {
 
     @Autowired
     MongoTemplate mongoTemplate;
+
+    @Autowired
+    EmailServiceImpl emailService;
 
     // -------------------------------------------------------
     //  CREATE SUBSCRIPTION
@@ -322,7 +326,7 @@ public class SubscriptionImpl implements SubscriptionService {
 
                     // Expire subscription
                     sub.setCurrentSubStatus(EnumSubscriptionStatus.EXPIRED);
-                    sub.setStatus(EnumStatusType.INACTIVE);
+                    sub.setStatus(EnumStatusType.DELETE);
                     sub.setUpdatedAt(LocalDateTime.now());
                     sub.setUpdatedBy("System Auto-Cron");
 
@@ -342,5 +346,67 @@ public class SubscriptionImpl implements SubscriptionService {
 
         return new ExpiredResultDto(successCount, failedUsers);
     }
+
+    public ExpiredResultDto notifyUsersBeforeExpiry() {
+
+        LocalDate today = LocalDate.now();
+
+        List<SubscriberEntity> subscribers = subscriberRepo.findByStatusNot(EnumStatusType.DELETE);
+
+        int notifiedCount = 0;
+        List<String> failedUsers = new ArrayList<>();
+
+        for (SubscriberEntity sub : subscribers) {
+
+            try {
+                if (sub.getSubEndDate() == null) {
+                    failedUsers.add(sub.getUser().getEmail() + " - End date missing");
+                    continue;
+                }
+
+                if (sub.getCurrentSubStatus() != EnumSubscriptionStatus.ACTIVE) {
+                    continue;
+                }
+
+                LocalDate endDate = LocalDate.parse(sub.getSubEndDate());
+                long daysLeft = ChronoUnit.DAYS.between(today, endDate);
+
+                // Only notify for 3,2,1 days left
+                if (daysLeft == 3 || daysLeft == 2 || daysLeft == 1) {
+
+                    // Prevent duplicate email
+                    if (sub.getLastReminderDate() != null &&
+                            sub.getLastReminderDate().equals(today.toString()) &&
+                            sub.getLastReminderDaysLeftSent() == daysLeft) {
+
+                        // Already sent today
+                        continue;
+                    }
+
+                    // Send email
+                    String email = sub.getUser().getEmail();
+                    String name = sub.getUser().getFirstName() + " " + sub.getUser().getLastName();
+
+                    emailService.sendExpiryWarningEmail(email, name, endDate, daysLeft);
+
+                    // Save reminder log
+                    sub.setLastReminderDate(today.toString());
+                    sub.setLastReminderDaysLeftSent((int) daysLeft);
+
+                    subscriberRepo.save(sub);
+
+                    notifiedCount++;
+                }
+
+            } catch (Exception ex) {
+
+                failedUsers.add(sub.getUser() != null ? sub.getUser().getId() : "UNKNOWN");
+                log.error("Reminder Cron Error for {}: {}", sub.getId(), ex.getMessage());
+            }
+        }
+
+        return new ExpiredResultDto(notifiedCount, failedUsers);
+    }
+
 
 }

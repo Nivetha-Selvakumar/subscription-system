@@ -220,7 +220,7 @@ public class SupportTicketImpl implements SupportTicketService {
                 .orElseThrow(() -> new CommonException("Ticket Not Found", 400));
 
         // Only owner can edit
-        if (!ticket.getUser().getId().equals(user.getId())) {
+        if (!ticket.getUser().getId().equals(user.getId()) && !user.getRole().equals(EnumUserType.ADMIN)) {
             throw new CommonException("Only ticket owner can edit this ticket", 403);
         }
 
@@ -229,6 +229,8 @@ public class SupportTicketImpl implements SupportTicketService {
             throw new CommonException("Cannot edit a closed ticket", 400);
         }
 
+        ticket.setTicketStatus(EnumTicketStatus.valueOf(dto.getTicketStatus()));
+        ticket.setStatus(EnumStatusType.valueOf(dto.getStatus()));
         ticket.setIssueDescription(dto.getIssueDescription());
         ticket.setUpdatedAt(LocalDateTime.now());
         ticket.setUpdatedBy(user.getFirstName() + " " + user.getLastName());

@@ -105,17 +105,4 @@ public class SubscriptionController {
 
     }
 
-    // Run manually OR via Cron
-    @GetMapping("/plan/expires")
-    public ResponseEntity<CommonResponseDto> expirePlansCron() throws CommonException {
-        log.info("Checking expired subscription plans...");
-
-        ExpiredResultDto expiredCount = subscriptionService.expireSubscriptions();
-
-        CommonResponseDto response =
-                new CommonResponseDto("Expired plans updated", HttpStatus.OK.value(), expiredCount);
-
-        return ResponseEntity.ok(response);
-    }
-
 }
