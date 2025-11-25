@@ -28,5 +28,7 @@ public class UserEditRequestDto {
     private String subStartDate;
     private String subEndDate;
     private String joinDate;
+    private String planName;
+    private String planType;
 
 }

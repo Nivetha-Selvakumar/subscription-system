@@ -26,7 +26,7 @@ public class AdminMapper {
     }
 
 
-    public AdminDashboardRequestDto mapToAdminDashboardRequestDto(long userCount, long activeSubscriptions, long revenue, long ticketsPending, SubscriptionChartDto statistics, List<ActivityDto> recentActivities) {
+    public AdminDashboardRequestDto mapToAdminDashboardRequestDto(long userCount, long activeSubscriptions, double revenue, long ticketsPending, SubscriptionChartDto statistics, List<ActivityDto> recentActivities) {
         AdminDashboardRequestDto adminDashboardRequestDto = new AdminDashboardRequestDto();
         adminDashboardRequestDto.setTotalUsers(userCount);
         adminDashboardRequestDto.setActiveSubscriptions(activeSubscriptions);
