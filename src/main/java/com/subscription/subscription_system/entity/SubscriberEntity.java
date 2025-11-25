@@ -57,4 +57,11 @@ public class SubscriberEntity {
 
     @Field("updated_by")
     private String updatedBy;
+
+    @Field("last_reminder_date")
+    private String lastReminderDate;   // store as String or LocalDate
+
+    @Field("last_reminder_days_left_sent")
+    private Integer lastReminderDaysLeftSent;
+
 }
