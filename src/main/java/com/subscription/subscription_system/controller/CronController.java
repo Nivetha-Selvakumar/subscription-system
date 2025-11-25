@@ -45,7 +45,7 @@ public class CronController {
             return;
         }
 
-        ExpiredResultDt. o result = subscriptionService.notifyUsersBeforeExpiry();
+        ExpiredResultDto result = subscriptionService.notifyUsersBeforeExpiry();
 
         log.info("Reminder cron completed: {}", result);
     }
