@@ -35,4 +35,11 @@ public interface SubscriberRepo extends MongoRepository<SubscriberEntity, String
     List<SubscriberEntity> findByStatusNot(EnumStatusType enumStatusType);
 
     SubscriberEntity findByUserAndStatusNotAndCurrentSubStatusNotIn(UserEntity user, EnumStatusType enumStatusType, List<EnumSubscriptionStatus> subStatus);
+
+    Optional<SubscriberEntity> findByUserAndStatusAndCurrentSubStatus(
+            UserEntity user,
+            EnumStatusType status,
+            EnumSubscriptionStatus currentSubStatus
+    );
+
 }
