@@ -95,12 +95,29 @@ public class SubscriptionImpl implements SubscriptionService {
 
         if (subscriptionCreateDto.getPaymentStatus().equalsIgnoreCase(EnumPaymentStatus.SUCCESS.getValue())) {
             // 5️ Create Subscriber entry
-            log.info("Mapping subscription to SubscriberEntity");
-            subscriber = subscriptionMapper.mapToNewSubscriber(
-                    userEntity,
-                    planEntity,
-                    subscriptionCreateDto
-            );
+
+            Optional<SubscriberEntity> existingSubscriberOpt =
+                    subscriberRepo.findByUserAndStatusAndCurrentSubStatus(
+                            userEntity,
+                            EnumStatusType.ACTIVE,
+                            EnumSubscriptionStatus.ACTIVE
+                    );
+
+            if (existingSubscriberOpt.isPresent()) {
+                // 🔥 UPDATE existing subscription
+                log.info("Existing active subscriber found → updating subscription...");
+                subscriber = subscriptionMapper.mapToUpdateSubscriber(
+                        existingSubscriberOpt.get(),
+                        planEntity
+                );
+            } else {
+                log.info("Mapping subscription to SubscriberEntity");
+                subscriber = subscriptionMapper.mapToNewSubscriber(
+                        userEntity,
+                        planEntity,
+                        subscriptionCreateDto
+                );
+            }
             subscriberRepo.save(subscriber);
 
             userEntity.setRole(EnumUserType.SUBSCRIBER);

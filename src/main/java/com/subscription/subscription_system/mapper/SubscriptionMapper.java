@@ -242,4 +242,38 @@ public class SubscriptionMapper {
     }
 
 
+    public SubscriberEntity mapToUpdateSubscriber(
+            SubscriberEntity subscriber,
+            SubscriptionPlanEntity plan
+    ) {
+        // Update plan
+        subscriber.setPlan(plan);
+
+        // Update subscription status
+        subscriber.setStatus(EnumStatusType.ACTIVE);
+        subscriber.setCurrentSubStatus(EnumSubscriptionStatus.ACTIVE);
+
+        // -------- DATE EXTEND LOGIC ----------
+        LocalDate start = LocalDate.now();
+        LocalDate end;
+
+        if (plan.getPlanType() == EnumPlanType.MONTHLY) {
+            end = start.plusMonths(1);
+        } else if (plan.getPlanType() == EnumPlanType.YEARLY) {
+            end = start.plusYears(1);
+        } else {
+            end = start.plusMonths(1);
+        }
+
+        subscriber.setSubStartDate(start.toString());
+        subscriber.setSubEndDate(end.toString());
+//        subscriber.setJoinDate(start.toString()); No need to update
+        // --------------------------------------
+
+        subscriber.setUpdatedAt(LocalDateTime.now());
+        subscriber.setUpdatedBy(subscriber.getUser().getFirstName() + " " + subscriber.getUser().getLastName());
+
+        return subscriber;
+    }
+
 }
