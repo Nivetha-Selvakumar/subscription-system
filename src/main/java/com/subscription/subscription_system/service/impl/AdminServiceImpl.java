@@ -191,8 +191,19 @@ public class AdminServiceImpl implements AdminService {
         List<PaymentEntity> payments = paymentRepo.findTop5ByOrderByCreatedAtDesc();
 
         for (PaymentEntity p : payments) {
+            String message;
+            String userName = p.getUser().getFirstName() + " " + p.getUser().getLastName();
+
+            if ("SUCCESS".equalsIgnoreCase(p.getPaymentStatus().toString())) {
+                message = "Payment of ₹" + p.getAmount() + " received from " + userName;
+
+            } else {
+                message = "Payment of ₹" + p.getAmount() + " failed from " + userName;
+            }
+
             activities.add(new ActivityDto(
-                    "Payment of ₹" + p.getAmount() + " received from " + p.getUser().getFirstName() + " " + p.getUser().getLastName(),
+//                    "Payment of ₹" + p.getAmount() + " received from " + p.getUser().getFirstName() + " " + p.getUser().getLastName(),
+                    message,
                     timeAgo(p.getCreatedAt()),
                     p.getCreatedAt()  // 👈 IMPORTANT
             ));

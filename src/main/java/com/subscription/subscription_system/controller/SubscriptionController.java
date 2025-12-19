@@ -31,7 +31,7 @@ public class SubscriptionController {
 
         log.info("Create Subscription for a user");
         SubscriptionDetailsDto subscriptionDetailsDto = subscriptionService.createSubscription(userId, planId, subscriptionCreateDto);
-        CommonResponseDto response = new CommonResponseDto("Subscription created successfully", HttpStatus.CREATED.value(), subscriptionDetailsDto);
+        CommonResponseDto response = new CommonResponseDto(subscriptionDetailsDto.getLastPaymentStatus().equals("FAILED") ?"Subscription Failed!":"Subscription created successfully", HttpStatus.CREATED.value(), subscriptionDetailsDto);
 
         return ResponseEntity.ok(response);
     }
