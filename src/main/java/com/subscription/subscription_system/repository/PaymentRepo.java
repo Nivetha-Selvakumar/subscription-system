@@ -1,6 +1,7 @@
 package com.subscription.subscription_system.repository;
 
 import com.subscription.subscription_system.entity.PaymentEntity;
+import com.subscription.subscription_system.entity.SubscriberEntity;
 import com.subscription.subscription_system.entity.UserEntity;
 import com.subscription.subscription_system.enumuration.EnumPaymentStatus;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -20,4 +21,6 @@ public interface PaymentRepo extends MongoRepository<PaymentEntity, String> {
     PaymentEntity findTopByUserAndPaymentStatusOrderByCreatedAtAsc(UserEntity user, EnumPaymentStatus enumPaymentStatus);
 
     List<PaymentEntity> findTop5ByUserIdOrderByCreatedAtDesc(String userId);
+
+    List<PaymentEntity> countByPaymentStatusAndUserIn(EnumPaymentStatus enumPaymentStatus, List<SubscriberEntity> subscriberEntity);
 }
